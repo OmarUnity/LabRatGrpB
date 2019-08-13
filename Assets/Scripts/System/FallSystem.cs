@@ -5,11 +5,6 @@ using Unity.Jobs;
 
 using UnityEngine;
 
-public struct FallTime : IComponentData
-{
-    public float Value;
-}
-
 // This system updates all entities in the scene with both a RotationSpeed_SpawnAndRemove and Rotation component.
 public class FallSystem : JobComponentSystem
 {
@@ -22,20 +17,19 @@ public class FallSystem : JobComponentSystem
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
     [BurstCompile]
-    struct FallTimeJob : IJobForEachWithEntity<FallTime>
+    struct FallTimeJob : IJobForEachWithEntity<LbLifetime>
     {
         public float DeltaTime;
 
-        [WriteOnly]
         public EntityCommandBuffer.Concurrent CommandBuffer;
 
-        public void Execute(Entity entity, int jobIndex, ref FallTime fallTime)
+        public void Execute(Entity entity, int jobIndex, ref LbLifetime fallTime)
         {
             fallTime.Value -= DeltaTime;
 
             if (fallTime.Value < 0.0f)
             {
-                CommandBuffer.AddComponent(jobIndex,entity,new DestroyTag());
+                CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
             }
         }
     }
@@ -49,7 +43,6 @@ public class FallSystem : JobComponentSystem
         {
             DeltaTime = Time.deltaTime,
             CommandBuffer = commandBuffer,
-
         }.Schedule(this, inputDependencies);
 
         m_Barrier.AddJobHandleForProducer(job);

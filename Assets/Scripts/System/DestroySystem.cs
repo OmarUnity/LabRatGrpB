@@ -8,10 +8,6 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-public struct DestroyTag : IComponentData
-{
-}
-
 // This system updates all entities in the scene with both a RotationSpeed_SpawnAndRemove and Rotation component.
 public class DestroySystem : JobComponentSystem
 {
@@ -25,16 +21,15 @@ public class DestroySystem : JobComponentSystem
     // Use the [BurstCompile] attribute to compile a job with Burst.
     // You may see significant speed ups, so try it!
     [BurstCompile]
-    struct RotationSpeedJob : IJobForEachWithEntity<DestroyTag>
+    struct RotationSpeedJob : IJobForEachWithEntity<LbDestroy>
     {
         //public float DeltaTime;
 
-        [WriteOnly]
         public EntityCommandBuffer.Concurrent CommandBuffer;
 
-        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref DestroyTag destroyTag)
+        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbDestroy destroyTag)
         {
-            CommandBuffer.DestroyEntity(jobIndex, entity);
+            //CommandBuffer.DestroyEntity(jobIndex, entity);
         }
     }
 

@@ -15,6 +15,6 @@ public class Authoring_FallAndDestroy : MonoBehaviour, IConvertGameObjectToEntit
     // To a good runtime representation (Represented in radians)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        dstManager.AddComponentData(entity, new FallTime { Value = LifeTime });
+        dstManager.AddComponentData(entity, new LbLifetime { Value = LifeTime });
     }
 }
