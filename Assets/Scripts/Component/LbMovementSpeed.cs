@@ -1,6 +1,11 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 
-public struct lbMovementSpeed : IComponentData
+/// <summary>
+/// Speed value for Entities that can move
+/// </summary>
+[Serializable]
+public struct LbMovementSpeed : IComponentData
 {
-    public float speed;
+    public float Value;
 }
