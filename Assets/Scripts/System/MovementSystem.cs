@@ -5,12 +5,12 @@ using Unity.Transforms;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Burst;
 
 public class MovementSystem : JobComponentSystem
 {
     EntityCommandBufferSystem   m_Barrier;
 
-    EntityQuery                 m_Group;
     EntityQuery                 m_Group_NorthMovement;
     EntityQuery                 m_Group_SouthMovement;
     EntityQuery                 m_Group_WestMovement;
@@ -123,10 +123,14 @@ public class MovementSystem : JobComponentSystem
             distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_EastMovement, inputDeps);
 
-        return JobHandle.CombineDependencies(JobHandle.CombineDependencies(job_North, job_South, job_East), job_West);
+        var finalHandle = JobHandle.CombineDependencies(JobHandle.CombineDependencies(job_North, job_South, job_East), job_West);
+        m_Barrier.AddJobHandleForProducer(finalHandle);
+
+        return finalHandle;
     }
 }
 
+[BurstCompile]
 public struct Move_Job : IJobChunk
 {
     public float deltaTime;

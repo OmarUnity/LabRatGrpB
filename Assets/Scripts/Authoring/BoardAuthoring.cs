@@ -11,23 +11,23 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 {
     public Vector2Int Size;
 
-    private readonly Dictionary<byte, short> m_DirMap = new Dictionary<byte, short>()
+    private readonly byte[] m_DirList =
     {
-        {0x0, 0x1B},
-        {0x1, 0x5B},
-        {0x8, 0x2B},
-        {0x2, 0x1F},
-        {0x4, 0x18},
-        {0x3, 0x5F},
-        {0xC, 0x28},
-        {0xD, 0xAA},
-        {0xB, 0xFF},
-        {0xE, 0x00},
-        {0x7, 0x55},
-        {0x9, 0xEB},
-        {0xA, 0x0F},
-        {0x6, 0x14},
-        {0x5, 0x5A}
+        0x1B,
+        0x5B,
+        0x1F,
+        0x5F,
+        0x18,
+        0x5A,
+         0x14,
+         0x55,
+        0x2B,
+        0xEB,
+        0x0F,
+         0xFF,
+        0x28,
+        0xAA,
+        0x00,
     };
 
     // The MonoBehaviour data is converted to ComponentData on the entity.
@@ -62,22 +62,12 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 HasWall(walls, cell, Directions.East)
             };
 
-            /*
-             bool[] hasWallArray = new []
-             {
-                 true,
-                 false,
-                 true,
-                 false
-             };*/
-
-
             var bitArrayWalls = new BitArray(hasWallArray);
 
             var bytesWalls = new byte[1];
             bitArrayWalls.CopyTo(bytesWalls, 0);
 
-            dirMapbuffer.Add(m_DirMap[bytesWalls[0]]);
+            dirMapbuffer.Add(m_DirList[bytesWalls[0]]);
         }
     }
 
