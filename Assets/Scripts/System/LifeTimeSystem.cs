@@ -28,8 +28,6 @@ public class LifeTimeSystem : JobComponentSystem
             if (lifeTime.Value < 0.0f)
             {
                 CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
-                //CommandBuffer.RemoveComponent<LbLifetime>(jobIndex,entity);
-                //CommandBuffer.RemoveComponent<LbFall>(jobIndex,entity);
             }
         }
     }
