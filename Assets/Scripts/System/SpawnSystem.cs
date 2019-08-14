@@ -6,24 +6,26 @@ using Random = Unity.Mathematics.Random;
 
 public class SpawnSystem : JobComponentSystem
 {
-    BeginInitializationEntityCommandBufferSystem commandBufferSystem;
-
+    private BeginInitializationEntityCommandBufferSystem _commandBufferSystem;
+    private Random _random = new Random(1);
+    
     protected override void OnCreate()
     {
-        commandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        _commandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
     struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>
     {
         public EntityCommandBuffer.Concurrent CommandBuffer;
         public float DeltaTime;
+        public int randomNumber;
 
         public void Execute(Entity entity, int index, ref LbSpawner lbSpawner, ref Translation translation, ref Rotation rotation)
         {
             lbSpawner.ElapsedTimeForMice += DeltaTime;
             lbSpawner.ElapsedTimeForCats += DeltaTime;
-            var random = new Random(1).NextInt(0, 3);
-            Debug.Log(random);
+             
+            Debug.Log(randomNumber);
             
             if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
             {
@@ -32,15 +34,15 @@ public class SpawnSystem : JobComponentSystem
                 CommandBuffer.SetComponent(index, mouseInstance, new Translation{Value = translation.Value});
                 CommandBuffer.SetComponent(index, mouseInstance, new Rotation{Value = rotation.Value});
                 CommandBuffer.AddComponent<LbReachCell>(index, mouseInstance);
-                if (random == 0)
+                if (randomNumber == 0)
                 {
                     CommandBuffer.AddComponent<LbNorthDirection>(index, mouseInstance);
                 }
-                else if (random == 1)
+                else if (randomNumber == 1)
                 {
                     CommandBuffer.AddComponent<LbSouthDirection>(index, mouseInstance);
                 }
-                else if (random == 2)
+                else if (randomNumber == 2)
                 {
                     CommandBuffer.AddComponent<LbEastDirection>(index, mouseInstance);
                 }
@@ -57,15 +59,15 @@ public class SpawnSystem : JobComponentSystem
                 CommandBuffer.SetComponent(index, catInstance, new Translation{Value = translation.Value});
                 CommandBuffer.SetComponent(index, catInstance, new Rotation{Value = rotation.Value});
                 CommandBuffer.AddComponent<LbReachCell>(index, catInstance);
-                if (random == 0)
+                if (randomNumber == 0)
                 {
                     CommandBuffer.AddComponent<LbNorthDirection>(index, catInstance);
                 }
-                else if (random == 1)
+                else if (randomNumber == 1)
                 {
                     CommandBuffer.AddComponent<LbSouthDirection>(index, catInstance);
                 }
-                else if (random == 2)
+                else if (randomNumber == 2)
                 {
                     CommandBuffer.AddComponent<LbEastDirection>(index, catInstance);
                 }
@@ -82,10 +84,11 @@ public class SpawnSystem : JobComponentSystem
         var jobHandle = new SpawnJob
         {
             DeltaTime = Time.deltaTime,
-            CommandBuffer = commandBufferSystem.CreateCommandBuffer().ToConcurrent()
+            CommandBuffer = _commandBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            randomNumber = _random.NextInt(0, 3)
         }.Schedule(this, inputDeps);
         
-        commandBufferSystem.AddJobHandleForProducer(jobHandle);
+        _commandBufferSystem.AddJobHandleForProducer(jobHandle);
 
         return jobHandle;
     }
