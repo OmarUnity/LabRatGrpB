@@ -20,16 +20,14 @@ public class DestroySystem : JobComponentSystem
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
     // You may see significant speed ups, so try it!
-    [BurstCompile]
-    struct RotationSpeedJob : IJobForEachWithEntity<LbDestroy>
+    //[BurstCompile]
+    struct DestroyJob : IJobForEachWithEntity<LbDestroy>
     {
-        //public float DeltaTime;
-
         public EntityCommandBuffer.Concurrent CommandBuffer;
 
         public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbDestroy destroyTag)
         {
-            //CommandBuffer.DestroyEntity(jobIndex, entity);
+            CommandBuffer.DestroyEntity(jobIndex, entity);
         }
     }
 
@@ -38,9 +36,8 @@ public class DestroySystem : JobComponentSystem
     {
         var commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent();
 
-        var job = new RotationSpeedJob
+        var job = new DestroyJob
         {
-            //DeltaTime = Time.deltaTime,
             CommandBuffer = commandBuffer,
 
         }.Schedule(this, inputDependencies);
