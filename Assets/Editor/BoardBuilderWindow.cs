@@ -8,14 +8,6 @@ using System.Collections.Generic;
 
 public class BoardBuilderWindow : EditorWindow
 {
-    public enum Direction
-    {
-        North,
-        East,
-        South,
-        West
-    }
-
     private const string kSizeXName = "Editor.SizeX";
     private const string kSizeYName = "Editor.SizeY";
     private const string kYNoiseName = "Editor.YNoise";
@@ -145,8 +137,12 @@ public class BoardBuilderWindow : EditorWindow
     /// </summary>
     private IEnumerator GenerateBoardInternal()
     {
-        // Get the board object and clean up all children
-        var boardTransform = FindOrCreateBoardObject();
+        // Get the board object
+        var board = FindOrCreateBoardObject();
+        board.Size = new Vector2Int(m_SizeX, m_SizeY);
+
+        // Clean up all childrens
+        var boardTransform = board.transform;
         EditorUtil.DestroyChildren(boardTransform);
 
         // Generate the board floor and external walls
@@ -162,16 +158,21 @@ public class BoardBuilderWindow : EditorWindow
                 obj.name = "board_" + coord;
                 obj.transform.SetParent(boardTransform);
 
+                var cell = obj.GetComponent<Cell>();
+                if (cell == null)
+                    cell = obj.AddComponent<Cell>();
+                cell.location = coord;
+
                 // Position the block
                 obj.transform.localPosition = new Vector3(
                     coord.x,
                     UnityEngine.Random.value * m_YNoise,
                     coord.y);
 
-                PlaceWall(Direction.North, coord, boardTransform, coord.y == m_SizeY - 1);
-                PlaceWall(Direction.East, coord + Vector2Int.right, boardTransform, coord.x == m_SizeX - 1);
-                PlaceWall(Direction.South, coord, boardTransform, coord.y == 0);
-                PlaceWall(Direction.West, coord, boardTransform, coord.x == 0);
+                PlaceWall(Directions.North, coord + Vector2Int.up, boardTransform, coord.y == m_SizeY - 1);
+                PlaceWall(Directions.East, coord + Vector2Int.right, boardTransform, coord.x == m_SizeX - 1);
+                PlaceWall(Directions.South, coord, boardTransform, coord.y == 0);
+                PlaceWall(Directions.West, coord, boardTransform, coord.x == 0);
 
                 m_GeneratingProgress++;
             }
@@ -187,7 +188,7 @@ public class BoardBuilderWindow : EditorWindow
     /// Find or create the board object
     /// </summary>
     /// <returns></returns>
-    private Transform FindOrCreateBoardObject()
+    private BoardAuthoring FindOrCreateBoardObject()
     {
         var obj = GameObject.Find("Board");
         if (obj == null)
@@ -196,20 +197,31 @@ public class BoardBuilderWindow : EditorWindow
             obj.name = "Board";
         }
 
-        return obj.transform;
+        var board = obj.GetComponent<BoardAuthoring>();
+        if (board == null)
+        {
+            board = obj.AddComponent<BoardAuthoring>();
+        }
+
+        return board;
     }
 
     /// <summary>
     /// Place a wall in the given coord with the given direction
     /// </summary>
     /// <param name="place">True to spawn the wall false to skip spawning</param>
-    private void PlaceWall(Direction direction, Vector2Int coord, Transform parent, bool place = true)
+    private void PlaceWall(Directions direction, Vector2Int coord, Transform parent, bool place = true)
     {
         if (!place)
             return;
 
         var obj = Instantiate(m_WallPrefab, Vector3.zero, Quaternion.identity, parent);
         obj.name = "wall_" + coord;
+
+        var wall = obj.GetComponent<Wall>();
+        if (wall == null)
+            wall = obj.AddComponent<Wall>();
+        wall.location = coord;
 
         var halfBoardWidth = 0.5f;
         var halfWallWidth = 0.025f;
@@ -223,24 +235,24 @@ public class BoardBuilderWindow : EditorWindow
         Vector3 offset = Vector3.zero;
         switch(direction)
         {
-            case Direction.North:
-                offset = new Vector3(0.0f, 0.0f, halfBoardWidth - halfWallWidth);
+            case Directions.North:
+                offset = new Vector3(0.0f, 0.0f, -1.0f * (halfBoardWidth + halfWallWidth));
                 break;
 
-            case Direction.East:
+            case Directions.East:
                 offset = new Vector3(-1.0f * (halfWallWidth + halfBoardWidth), 0.0f, 0.0f);
                 break;
 
-            case Direction.West:
+            case Directions.West:
                 offset = new Vector3(halfWallWidth- halfBoardWidth, 0.0f, 0.0f);
                 break;
 
-            case Direction.South:
+            case Directions.South:
                 offset = new Vector3(0.0f, 0.0f, halfWallWidth - halfBoardWidth);
                 break;
         }
 
-        if (direction == Direction.North || direction == Direction.South)
+        if (direction == Directions.North || direction == Directions.South)
             obj.transform.Rotate(0, 90f, 0);
         obj.transform.localPosition = center + offset;
         obj.transform.SetParent(parent);
@@ -250,29 +262,27 @@ public class BoardBuilderWindow : EditorWindow
     /// <summary>
     /// Start a coroutine
     /// </summary>
-    /// <param name="name"></param>
-    private void StartCoroutine(string name)
+    private void StartCoroutine(string coroutineName)
     {
-        marijnz.EditorCoroutines.EditorCoroutines.StartCoroutine(name, this);
+        marijnz.EditorCoroutines.EditorCoroutines.StartCoroutine(coroutineName, this);
     }
 
     /// <summary>
     /// Stop a coroutine
     /// </summary>
-    /// <param name="name"></param>
-    private void StopCoroutine(string name)
+    private void StopCoroutine(string coroutineName)
     {
-        marijnz.EditorCoroutines.EditorCoroutines.StopCoroutine(name, this);
+        marijnz.EditorCoroutines.EditorCoroutines.StopCoroutine(coroutineName, this);
     }
 
     /// <summary>
     /// Check if the object is null and print an error message
     /// </summary>
-    private bool IsObjectInvalid(string name, GameObject go)
+    private bool IsObjectInvalid(string objName, GameObject go)
     {
         if (go == null)
         {
-            Debug.LogError("Cannot generate Board: " + name + " prefab is null!");
+            Debug.LogError("Cannot generate Board: " + objName + " prefab is null!");
             return true;
         }
         return false;
@@ -284,7 +294,7 @@ public class BoardBuilderWindow : EditorWindow
     private void FloatField(string key, string label, ref float number)
     {
         var n = EditorGUILayout.DelayedFloatField(label, number);
-        if (n != number)
+        if (Math.Abs(n - number) > 0.01f)
         {
             PlayerPrefs.SetFloat(key, n);
             number = n;
