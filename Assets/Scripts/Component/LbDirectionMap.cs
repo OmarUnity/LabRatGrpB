@@ -9,5 +9,13 @@ public struct LbDirectionMap : IBufferElementData
     public static implicit operator LbDirectionMap(short e) { return new LbDirectionMap { Value = e }; }
 
     // Actual value each buffer element will store.
-    public short Value;
+    
+  //  North,   00   0,0,1
+  //  East,    01   1,0,0
+  //  South,   10   0,0,-1
+  //  West     11   -1,0,0
+    
+   //            North South West East |  1 bit change flag | New Dir
+  // NextDir //  [][]  [][]  [][] [][]          []            [][]
+   public short Value;
 }
