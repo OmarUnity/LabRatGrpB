@@ -253,7 +253,15 @@ public class BoardBuilderWindow : EditorWindow
         }
 
         if (direction == Directions.North || direction == Directions.South)
+        {
             obj.transform.Rotate(0, 90f, 0);
+            wall.isHorizontal = true;
+        }
+        else
+        {
+            wall.isHorizontal = false;
+        }
+
         obj.transform.localPosition = center + offset;
         obj.transform.SetParent(parent);
     }
