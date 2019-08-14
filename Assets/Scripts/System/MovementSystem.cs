@@ -3,81 +3,31 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Collections;
+using Unity.Mathematics;
 
 public class MovementSystem : JobComponentSystem
 {
-    public struct MoveNorth_Job : IJobForEachWithEntity<LbNorthDirection, LbMovementSpeed, Translation>
+    // IJobChunk <- 
+    public struct Move_Job : IJobForEachWithEntity<LbMovementSpeed, Translation>
     {
-        public float deltaTime;
+        public float  deltaTime;
+        public float3 direction;
+
         public EntityCommandBuffer.Concurrent commandBuffer;
 
-        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbNorthDirection northDirection, [ReadOnly] ref LbMovementSpeed movementSpeed, ref Translation translation)
+        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbMovementSpeed movementSpeed, ref Translation translation)
         {
             float lastLerp = Mathf.Lerp(translation.Value.z, Mathf.Round(translation.Value.z), movementSpeed.Value);
-            translation.Value.z += movementSpeed.Value * deltaTime;
+            //translation.Value.z += movementSpeed.Value * deltaTime;
+
+            translation.Value += direction * movementSpeed.Value * deltaTime;
+
             float newLerp = Mathf.Lerp(translation.Value.z, Mathf.Round(translation.Value.z), movementSpeed.Value);
 
             // When the Entity reach a new cell is add the Tag LbReachCell
             if ( Mathf.Abs( (int)(newLerp - lastLerp) ) == 1 )
             {
                 commandBuffer.AddComponent( jobIndex, entity, new LbReachCell() );
-            }
-        }
-    }
-
-    public struct MoveSouth_Job : IJobForEachWithEntity<LbSouthDirection, LbMovementSpeed, Translation>
-    {
-        public float deltaTime;
-        public EntityCommandBuffer.Concurrent commandBuffer;
-
-        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbSouthDirection southDirection, [ReadOnly] ref LbMovementSpeed movementSpeed, ref Translation translation)
-        {
-            float lastLerp = Mathf.Lerp(translation.Value.z, Mathf.Round(translation.Value.z), movementSpeed.Value);
-            translation.Value.z -= movementSpeed.Value * deltaTime;
-            float newLerp = Mathf.Lerp(translation.Value.z, Mathf.Round(translation.Value.z), movementSpeed.Value);
-
-            // When the Entity reach a new cell is add the Tag LbReachCell
-            if (Mathf.Abs( (int)(newLerp - lastLerp) ) == 1)
-            {
-                commandBuffer.AddComponent(jobIndex, entity, new LbReachCell());
-            }
-        }
-    }
-
-    public struct MoveWest_Job : IJobForEachWithEntity<LbWestDirection, LbMovementSpeed, Translation>
-    {
-        public float deltaTime;
-        public EntityCommandBuffer.Concurrent commandBuffer;
-
-        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbWestDirection westDirection, [ReadOnly] ref LbMovementSpeed movementSpeed, ref Translation translation)
-        {
-            float lastLerp = Mathf.Lerp(translation.Value.x, Mathf.Round(translation.Value.x), movementSpeed.Value);
-            translation.Value.x -= movementSpeed.Value * deltaTime;
-            float newLerp = Mathf.Lerp(translation.Value.x, Mathf.Round(translation.Value.x), movementSpeed.Value);
-
-            // When the Entity reach a new cell is add the Tag LbReachCell
-            if (Mathf.Abs((int)(newLerp - lastLerp)) == 1)
-            {
-                commandBuffer.AddComponent(jobIndex, entity, new LbReachCell());
-            }
-        }
-    }
-
-    public struct MoveEast_Job : IJobForEachWithEntity<LbEastDirection, LbMovementSpeed, Translation>
-    {
-        public float deltaTime;
-        public EntityCommandBuffer.Concurrent commandBuffer;
-
-        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbEastDirection eastDirection, [ReadOnly] ref LbMovementSpeed movementSpeed, ref Translation translation)
-        {
-            float lastLerp = Mathf.Lerp(translation.Value.x, Mathf.Round(translation.Value.x), movementSpeed.Value);
-            translation.Value.x += movementSpeed.Value * deltaTime;
-            float newLerp = Mathf.Lerp(translation.Value.x, Mathf.Round(translation.Value.x), movementSpeed.Value);
-
-            // When the Entity reach a new cell is add the Tag LbReachCell
-            if (Mathf.Abs((int)(newLerp - lastLerp)) == 1)
-            {
-                commandBuffer.AddComponent(jobIndex, entity, new LbReachCell());
             }
         }
     }
@@ -151,27 +101,31 @@ public class MovementSystem : JobComponentSystem
     {
         float deltaTime = Mathf.Clamp(Time.deltaTime, 0.0f, 0.3f);
 
-        var moveNorth_Job = new MoveNorth_Job
+        var moveNorth_Job = new Move_Job
         {
             deltaTime       = deltaTime,
+            direction       = new float3(0, 0, 1),
             commandBuffer   = m_Barrier.CreateCommandBuffer().ToConcurrent()
         }.Schedule(m_Group_NorthMovement, inputDeps);
 
-        var moveSouth_Job = new MoveSouth_Job
+        var moveSouth_Job = new Move_Job
         {
             deltaTime = deltaTime,
+            direction = new float3(0, 0, -1),
             commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent()
         }.Schedule(m_Group_SouthMovement, moveNorth_Job);
 
-        var moveWest_Job = new MoveWest_Job
+        var moveWest_Job = new Move_Job
         {
             deltaTime = deltaTime,
+            direction = new float3(-1, 0, 0),
             commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent()
         }.Schedule(m_Group_WestMovement, moveSouth_Job);
 
-        var moveEast_Job = new MoveEast_Job
+        var moveEast_Job = new Move_Job
         {
             deltaTime = deltaTime,
+            direction = new float3(1, 0, 0),
             commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent()
         }.Schedule(m_Group_EastMovement, moveWest_Job);
 
