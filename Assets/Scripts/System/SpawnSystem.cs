@@ -5,36 +5,51 @@ using UnityEngine;
 
 public class SpawnSystem : JobComponentSystem
 {
-    private BeginInitializationEntityCommandBufferSystem commandBufferSystem;
+    BeginInitializationEntityCommandBufferSystem commandBufferSystem;
 
     protected override void OnCreate()
     {
         commandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
-    public struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>
+    struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>
     {
-        public EntityCommandBuffer.Concurrent commandBuffer;
+        public EntityCommandBuffer.Concurrent CommandBuffer;
         public float DeltaTime;
         
         public void Execute(Entity entity, int index, ref LbSpawner lbSpawner, ref Translation translation, ref Rotation rotation)
         {
-            var instance = commandBuffer.Instantiate(index, lbSpawner.Prefab);
-            commandBuffer.SetComponent(index, instance, new Translation{Value = translation.Value});
-            commandBuffer.SetComponent(index, instance, new Rotation{Value = rotation.Value});
+            lbSpawner.ElapsedTimeForMice += DeltaTime;
+            lbSpawner.ElapsedTimeForCats += DeltaTime;
+            
+            if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
+            {
+                lbSpawner.ElapsedTimeForMice = 0;
+                var mouseInstance = CommandBuffer.Instantiate(index, lbSpawner.MousePrefab);
+                CommandBuffer.SetComponent(index, mouseInstance, new Translation{Value = translation.Value});
+                CommandBuffer.SetComponent(index, mouseInstance, new Rotation{Value = rotation.Value});
+            }
+            
+            if (lbSpawner.ElapsedTimeForCats > lbSpawner.CatFrequency)
+            {
+                lbSpawner.ElapsedTimeForCats = 0;
+                var catInstance = CommandBuffer.Instantiate(index, lbSpawner.CatPrefab);
+                CommandBuffer.SetComponent(index, catInstance, new Translation{Value = translation.Value});
+                CommandBuffer.SetComponent(index, catInstance, new Rotation{Value = rotation.Value});
+            }
         }
     }
     
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var job = new SpawnJob
+        var jobHandle = new SpawnJob
         {
             DeltaTime = Time.deltaTime,
-            commandBuffer = commandBufferSystem.CreateCommandBuffer().ToConcurrent()
+            CommandBuffer = commandBufferSystem.CreateCommandBuffer().ToConcurrent()
         }.Schedule(this, inputDeps);
         
-        commandBufferSystem.AddJobHandleForProducer(job);
+        commandBufferSystem.AddJobHandleForProducer(jobHandle);
 
-        return job;
+        return jobHandle;
     }
 }
