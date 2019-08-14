@@ -16,7 +16,7 @@ public class FallSystem : JobComponentSystem
     }
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
-    [BurstCompile]
+    //[BurstCompile]
     struct FallTimeJob : IJobForEachWithEntity<LbLifetime>
     {
         public float DeltaTime;
@@ -30,6 +30,7 @@ public class FallSystem : JobComponentSystem
             if (fallTime.Value < 0.0f)
             {
                 CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
+                CommandBuffer.RemoveComponent<LbLifetime>(jobIndex,entity);
             }
         }
     }
