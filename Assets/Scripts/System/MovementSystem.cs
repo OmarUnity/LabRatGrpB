@@ -90,7 +90,8 @@ public class MovementSystem : JobComponentSystem
             //commandBuffer       = m_Barrier.CreateCommandBuffer().ToConcurrent(),
 
             translationType     = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true )
+            movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true ),
+            distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         };
 
         var job_South = new Move_Job
@@ -99,7 +100,8 @@ public class MovementSystem : JobComponentSystem
             direction = new float3(0, 0, -1),
             
             translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         };
 
         var job_West = new Move_Job
@@ -108,7 +110,8 @@ public class MovementSystem : JobComponentSystem
             direction = new float3(-1, 0, 0),
 
             translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         };
 
         var job_East = new Move_Job
@@ -117,7 +120,8 @@ public class MovementSystem : JobComponentSystem
             direction = new float3(1, 0, 0),
 
             translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         };
 
         inputDeps = job_North.Schedule( m_Group_NorthMovement, inputDeps );
