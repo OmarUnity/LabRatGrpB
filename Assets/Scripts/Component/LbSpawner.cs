@@ -2,7 +2,7 @@
 
 public struct LbSpawner : IComponentData
 {
-    public Entity entityPrefab;
-    public int maxAmount;
-    public int frecuency;
+    public Entity Prefab;
+    public int MaxAmount;
+    public float Frequency;
 }

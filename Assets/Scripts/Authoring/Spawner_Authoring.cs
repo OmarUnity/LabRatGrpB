@@ -19,9 +19,9 @@ public class Spawner_Authoring : MonoBehaviour, IDeclareReferencedPrefabs, IConv
     {
         var spawnerData = new LbSpawner
         {
-            entityPrefab = conversionSystem.GetPrimaryEntity(prefab),
-            maxAmount = maxAmount,
-            frecuency = frecuency
+            Prefab = conversionSystem.GetPrimaryEntity(prefab),
+            MaxAmount = maxAmount,
+            Frequency = frecuency
         };
         dstManager.AddComponentData(entity, spawnerData);
     }

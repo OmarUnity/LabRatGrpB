@@ -12,5 +12,4 @@ public struct LbBoard : IComponentData
     /// Board size
     /// </summary>
     public int2 Size;
-
 }

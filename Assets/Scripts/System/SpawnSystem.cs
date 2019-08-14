@@ -17,7 +17,7 @@ public class SpawnSystem : JobComponentSystem
         
         public void Execute(Entity entity, int index, ref LbSpawner c0, ref Translation translation, ref Rotation rotation)
         {
-            var instance = commandBuffer.Instantiate(index, c0.entityPrefab);
+            var instance = commandBuffer.Instantiate(index, c0.Prefab);
             commandBuffer.SetComponent(index, instance, new Translation{Value = translation.Value});
             commandBuffer.SetComponent(index, instance, new Rotation{Value = rotation.Value});
         }

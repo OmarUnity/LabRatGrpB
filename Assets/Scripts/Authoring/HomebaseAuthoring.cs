@@ -12,7 +12,7 @@ public class HomebaseAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     // To a good runtime representation (Represented in radians)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        dstManager.AddComponentData(entity, new LbPlayer { Value = LbPlayer.ConvertToByte(Player) });
+        dstManager.AddComponentData(entity, new LbPlayer { Value = (byte)Player });
         dstManager.AddComponentData(entity, new LbPlayerScore { Value = 0 });
     }
 }

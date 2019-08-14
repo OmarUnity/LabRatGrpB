@@ -14,9 +14,4 @@ public struct LbScore : IComponentData
     /// Score type
     /// </summary>
     public byte Type;
-
-    /// <summary>
-    /// Identifier for the player that will add or reduce score points
-    /// </summary>
-    public byte PlayerId;
 }
