@@ -6,4 +6,5 @@
 public class Wall : MonoBehaviour
 {
     public Vector2Int location;
+    public bool isHorizontal;
 }

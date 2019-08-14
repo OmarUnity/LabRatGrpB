@@ -1,8 +1,8 @@
 ﻿using Unity.Entities;
 
 /// <summary>
-/// Tag to identify which entities are mouses
+/// Tag to identify which entities are cats
 /// </summary>
-public struct LbMouse : IComponentData
+public struct LbCat : IComponentData
 {
 }

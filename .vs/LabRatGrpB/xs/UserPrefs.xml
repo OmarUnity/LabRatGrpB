@@ -1,8 +1,11 @@
 ﻿<Properties StartupConfiguration="{3145B958-3221-1A89-B19C-CC5F0692E17B}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/System/FallSystem.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Authoring/Movement_Authoring.cs">
     <Files>
-      <File FileName="Assets/Scripts/System/DestroySystem.cs" Line="27" Column="1" />
-      <File FileName="Assets/Scripts/System/FallSystem.cs" Line="23" Column="1" />
+      <File FileName="Assets/Scripts/Authoring/Movement_Authoring.cs" Line="17" Column="57" />
+      <File FileName="Assets/Scripts/System/MovementSystem.cs" Line="17" Column="54" />
+      <File FileName="Assets/Scripts/System/FallSystem.cs" />
+      <File FileName="Assets/Scripts/Component/LbMovementSpeed.cs" />
+      <File FileName="Assets/Scripts/Component/Tags/LbDirection.cs" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -10,11 +13,13 @@
           <Node name="LabRatGrpB" expanded="True">
             <Node name="Assets" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="Authoring" expanded="True" />
-                <Node name="Component" expanded="True" />
-                <Node name="System" expanded="True">
-                  <Node name="FallSystem.cs" selected="True" />
+                <Node name="Authoring" expanded="True">
+                  <Node name="Movement_Authoring.cs" selected="True" />
                 </Node>
+                <Node name="Component" expanded="True">
+                  <Node name="Tags" expanded="True" />
+                </Node>
+                <Node name="System" expanded="True" />
               </Node>
             </Node>
           </Node>
@@ -24,7 +29,7 @@
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="242695d7-1f4f-47dc-a7fe-a7f8e5023275" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="4c9acd7e-9949-40ef-8bd4-770b371af756" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

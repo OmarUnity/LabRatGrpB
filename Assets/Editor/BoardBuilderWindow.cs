@@ -11,22 +11,33 @@ public class BoardBuilderWindow : EditorWindow
     private const string kSizeXName = "Editor.SizeX";
     private const string kSizeYName = "Editor.SizeY";
     private const string kYNoiseName = "Editor.YNoise";
+    private const string kRandomSeedName = "Editor.RandomSeed";
 
     private const string kCellName = "Editor.CellPrefab";
     private const string kWallName = "Editor.WallPrefab";
-    private const string kHomebaseName = "Editor.HomebasePrefab";
     private const string kMouseSpawnerName = "Editor.MouseSpawnerPrefab";
     private const string kCatSpawnerName = "Editor.CatSpawnerPrefab";
+
+    private const string kHomebaseName1 = "Editor.HomeBase1";
+    private const string kHomebaseName2 = "Editor.HomeBase2";
+    private const string kHomebaseName3 = "Editor.HomeBase3";
+    private const string kHomebaseName4 = "Editor.HomeBase4";
 
     private int m_SizeX = 100;
     private int m_SizeY = 100;
     private float m_YNoise = 0.05f;
+    private int m_RandomSeed = -1;
 
     private GameObject m_CellPrefab = null;
     private GameObject m_WallPrefab = null;
-    private GameObject m_HomebasePrefab = null;
+
     private GameObject m_MouseSpawnerPrefab = null;
     private GameObject m_CatSpawnerPrefab = null;
+
+    private GameObject m_Homebase1 = null;
+    private GameObject m_Homebase2 = null;
+    private GameObject m_Homebase3 = null;
+    private GameObject m_Homebase4 = null;
 
     private bool m_IsGenerating = false;
     private int m_GeneratingProgress = 0;
@@ -63,11 +74,27 @@ public class BoardBuilderWindow : EditorWindow
         FloatField(kYNoiseName, "Y Noise:", ref m_YNoise);
 
         GUILayout.Space(5.0f);
+        GUILayout.Label("RANDOM");
+
+        IntField(kRandomSeedName, "Random Seed:", ref m_RandomSeed);
+
+        GUILayout.Space(5.0f);
         GUILayout.Label("PREFABS");
 
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Board");
         ObjectField(kCellName, "Cell Prefab", ref m_CellPrefab);
         ObjectField(kWallName, "Wall Prefab", ref m_WallPrefab);
-        ObjectField(kHomebaseName, "Homebase Prefab", ref m_HomebasePrefab);
+
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Homebases");
+        ObjectField(kHomebaseName1, "Homebase1 Prefab", ref m_Homebase1);
+        ObjectField(kHomebaseName2, "Homebase2 Prefab", ref m_Homebase2);
+        ObjectField(kHomebaseName3, "Homebase3 Prefab", ref m_Homebase3);
+        ObjectField(kHomebaseName4, "Homebase4 Prefab", ref m_Homebase4);
+
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Spawners");
         ObjectField(kMouseSpawnerName, "Mouse Spawner Prefab", ref m_MouseSpawnerPrefab);
         ObjectField(kCatSpawnerName, "Cat Spawner Prefab", ref m_CatSpawnerPrefab);
 
@@ -101,10 +128,14 @@ public class BoardBuilderWindow : EditorWindow
         LoadInt(kSizeXName, ref m_SizeX);
         LoadInt(kSizeYName, ref m_SizeY);
         LoadFloat(kYNoiseName, ref m_YNoise);
+        LoadInt(kRandomSeedName, ref m_RandomSeed);
 
         LoadObject(kCellName, ref m_CellPrefab);
         LoadObject(kWallName, ref m_WallPrefab);
-        LoadObject(kHomebaseName, ref m_HomebasePrefab);
+        LoadObject(kHomebaseName1, ref m_Homebase1);
+        LoadObject(kHomebaseName2, ref m_Homebase2);
+        LoadObject(kHomebaseName3, ref m_Homebase3);
+        LoadObject(kHomebaseName4, ref m_Homebase4);
         LoadObject(kMouseSpawnerName, ref m_MouseSpawnerPrefab);
         LoadObject(kCatSpawnerName, ref m_CatSpawnerPrefab);
     }
@@ -180,8 +211,136 @@ public class BoardBuilderWindow : EditorWindow
             yield return null;
         }
 
+
+        var oldState = UnityEngine.Random.state;
+        if (m_RandomSeed != -1)
+            UnityEngine.Random.InitState(m_RandomSeed);
+
+        var wallMap = board.GetWalls();
+
+        // Create random Walls
+        int numWalls = (int)(m_SizeX * m_SizeY * 0.2f);
+        for (int c = 0; c < numWalls; ++c)
+        {
+            var location = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
+            var direction = GetRandomDirection();
+
+            if (BoardAuthoring.HasWall(wallMap, location, direction))
+                continue;
+
+            int count = 0;
+            if (direction != Directions.North && BoardAuthoring.HasWall(wallMap, location, Directions.North))
+                count++;
+            if (direction != Directions.East && BoardAuthoring.HasWall(wallMap, location, Directions.East))
+                count++;
+            if (direction != Directions.South && BoardAuthoring.HasWall(wallMap, location, Directions.South))
+                count++;
+            if (direction != Directions.West && BoardAuthoring.HasWall(wallMap, location, Directions.West))
+                count++;
+
+            // Avoid closed cells
+            if (count >= 3)
+                continue;
+
+            var wall = PlaceWall(direction, location, boardTransform);
+            BoardAuthoring.AddWallToDictionary(ref wallMap, wall);
+        }
+
+        // Setup home bases
+
+        var offset = 1f / 3f;
+        var placeX = m_SizeX * offset;
+        var placeY = m_SizeY * offset;
+
+        PlaceHomebase(Players.Player1, placeX, placeY, boardTransform);
+        PlaceHomebase(Players.Player2, placeX * 2f, placeY, boardTransform);
+        PlaceHomebase(Players.Player3, placeX * 2f, placeY * 2f, boardTransform);
+        PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform);
+
+        //SpawnerAt(MouseSpawner, 0, 0, Quaternion.identity);
+        //SpawnerAt(MouseSpawner, boardSize.x - 1, boardSize.y - 1, Quaternion.Euler(180, 0, 0));
+        //SpawnerAt(CatSpawner, 0, boardSize.y - 1, Quaternion.Euler(0, 0, 0));
+        //SpawnerAt(CatSpawner, boardSize.x - 1, 0, Quaternion.Euler(0, 0, 0));
+
+        //int numHoles = Random.Range(0, 4);
+        //for (int i = 0; i < numHoles; ++i)
+        //{
+        //    var coord = new Vector2Int(Random.Range(0, boardSize.x), Random.Range(0, boardSize.y));
+        //    if (coord.x > 0 && coord.y > 0 && coord.x < boardSize.x - 1 && coord.y < boardSize.y - 1 && board.CellAtCoord(coord).IsEmpty())
+        //        board.RemoveCell(coord);
+        //}
+
+        UnityEngine.Random.state = oldState;
+
         Debug.Log("Board Generated!");
         m_IsGenerating = false;
+    }
+
+    /// <summary>
+    /// Place a homebase for the given player in the location
+    /// </summary>
+    private void PlaceHomebase(Players player, float X, float Y, Transform parent)
+    {
+        Vector2Int location = new Vector2Int((int)X, (int)Y);
+        var prefab = GetHomebasePrefab(player);
+
+        var obj = Instantiate(prefab, Vector3.zero, Quaternion.identity, parent);
+        obj.name = "homebase_" + player;
+
+        var center = new Vector3(
+            location.x,             
+            0.0f,                   // Change when we have a height variable
+            location.y);
+
+        obj.transform.localPosition = center;
+        obj.transform.SetParent(parent);
+    }
+
+    /// <summary>
+    /// Get the homebse prefab for the player
+    /// </summary>
+    private GameObject GetHomebasePrefab(Players player)
+    {
+        switch(player)
+        {
+            case Players.Player1:
+                return m_Homebase1;
+
+            case Players.Player2:
+                return m_Homebase2;
+
+            case Players.Player3:
+                return m_Homebase3;
+
+            case Players.Player4:
+                return m_Homebase4;
+
+            default:
+                throw new Exception("Invalid player!");
+        }
+    }
+
+    /// <summary>
+    /// Get a random direction 
+    /// </summary>
+    /// <returns></returns>
+    private Directions GetRandomDirection()
+    {
+        var dirNumber = UnityEngine.Random.Range(0, 4);
+        switch (dirNumber)
+        {
+            case 0:
+                return Directions.North;
+
+            case 1:
+                return Directions.East;
+
+            case 2:
+                return Directions.South;
+
+            default:
+                return Directions.West;
+        }
     }
 
     /// <summary>
@@ -210,10 +369,10 @@ public class BoardBuilderWindow : EditorWindow
     /// Place a wall in the given coord with the given direction
     /// </summary>
     /// <param name="place">True to spawn the wall false to skip spawning</param>
-    private void PlaceWall(Directions direction, Vector2Int coord, Transform parent, bool place = true)
+    private Wall PlaceWall(Directions direction, Vector2Int coord, Transform parent, bool place = true)
     {
         if (!place)
-            return;
+            return null;
 
         var obj = Instantiate(m_WallPrefab, Vector3.zero, Quaternion.identity, parent);
         obj.name = "wall_" + coord;
@@ -253,9 +412,19 @@ public class BoardBuilderWindow : EditorWindow
         }
 
         if (direction == Directions.North || direction == Directions.South)
+        {
             obj.transform.Rotate(0, 90f, 0);
+            wall.isHorizontal = true;
+        }
+        else
+        {
+            wall.isHorizontal = false;
+        }
+
         obj.transform.localPosition = center + offset;
         obj.transform.SetParent(parent);
+
+        return wall;
     }
 
     #region GUI_HELPERS

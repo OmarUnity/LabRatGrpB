@@ -29,17 +29,20 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         {0x6, 0x14},
         {0x5, 0x5A}
     };
-    
+
     // The MonoBehaviour data is converted to ComponentData on the entity.
     // We are specifically transforming from a good editor representation of the data (Represented in degrees)
     // To a good runtime representation (Represented in radians)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        dstManager.AddComponentData(entity, new LbBoard { Size = new int2(Size.x, Size.y) });
-        Entity DirMapEntity = dstManager.CreateEntity(typeof(LbDirectionMap));
+        dstManager.AddComponentData(entity, new LbBoard
+        {
+            SizeX = (byte)Size.x,
+            SizeY = (byte)Size.y
+        });
         
+        Entity DirMapEntity = dstManager.CreateEntity(typeof(LbDirectionMap));
         DynamicBuffer<LbDirectionMap> dirMapbuffer = dstManager.GetBuffer<LbDirectionMap>(DirMapEntity);
-
 
         var cells = GetCells();
         var walls = GetWalls();
@@ -59,7 +62,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 HasWall(walls, cell, Directions.West),
                 HasWall(walls, cell, Directions.East)
             };
-            
+
            /*
             bool[] hasWallArray = new []
             {
@@ -67,14 +70,14 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 false,
                 true,
                 false
-            };*/ 
-            
-            
+            };*/
+
+
             BitArray bitArrayWalls = new BitArray(hasWallArray);
-            
+
             byte[] bytesWalls = new byte[1];
             bitArrayWalls.CopyTo(bytesWalls, 0);
-            
+
             Debug.Log(bytesWalls[0]);
             dirMapbuffer.Add(dirmap[bytesWalls[0]]);
             // TODO ....
@@ -83,10 +86,19 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 
     #region BOARD_MAP_GENERATION
     /// <summary>
+    /// Data to track walls in a board location
+    /// </summary>
+    public struct WallData
+    {
+        public Wall Vertical;
+        public Wall Horizontal;
+    }
+
+    /// <summary>
     /// Get the list of all cell locations
     /// </summary>
     /// <returns></returns>
-    public List<Vector2Int> GetCells()
+    private List<Vector2Int> GetCells()
 	{
 		List<Vector2Int> cells = new List<Vector2Int>();
 
@@ -100,21 +112,117 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     /// <summary>
     /// Get the walls map
     /// </summary>
-    public Dictionary<Vector2Int, Wall> GetWalls()
+    public Dictionary<Vector2Int, WallData> GetWalls()
     {
-        Dictionary<Vector2Int, Wall> wallMap = new Dictionary<Vector2Int, Wall>();
+        Dictionary<Vector2Int, WallData> wallMap = new Dictionary<Vector2Int, WallData>();
 
-        // TODO
+        var walls = GetComponentsInChildren<Wall>();
+        foreach (var wall in walls)
+            AddWallToDictionary(ref wallMap, wall);
 
         return wallMap;
     }
 
     /// <summary>
+    /// Add a wall to the dictionary
+    /// </summary>
+    /// <param name="Map"></param>
+    /// <param name="wall"></param>
+    public static void AddWallToDictionary(ref Dictionary<Vector2Int, WallData> Map, Wall wall)
+    {
+        var location = wall.location;
+        if (!Map.ContainsKey(location))
+        {
+            Map.Add(location, new WallData());
+        }
+
+        var data = Map[location];
+        if (wall.isHorizontal)
+        {
+            data.Horizontal = wall;
+        }
+        else
+        {
+            data.Vertical = wall;
+        }
+
+        Map[location] = data;
+    }
+
+    /// <summary>
     /// Return true if there is a wall in the given direction starting in the given location
     /// </summary>
-    public bool HasWall(Dictionary<Vector2Int, Wall> walls, Vector2Int location, Directions direction)
+    public static bool HasWall(Dictionary<Vector2Int, WallData> walls, Vector2Int location, Directions direction)
     {
-        return true;
+        switch(direction)
+        {
+            case Directions.North:
+                location += Vector2Int.up;
+                break;
+
+            case Directions.East:
+                location += Vector2Int.right;
+                break;
+        }
+
+        if (walls.ContainsKey(location))
+        {
+            var data = walls[location];
+            var wall = (direction == Directions.North || direction == Directions.South) ? data.Horizontal : data.Vertical;
+            return wall != null;
+        }
+        return false;
     }
+
+    /// <summary>
+    /// Call some tests
+    /// </summary>
+    private void DoTests(Dictionary<Vector2Int, WallData> walls)
+    {
+        TestWall(walls, 0, 0, Directions.South, true);
+        TestWall(walls, 0, 0, Directions.East, false);
+        TestWall(walls, 0, 0, Directions.West, true);
+        TestWall(walls, 0, 0, Directions.North, false);
+
+        TestWall(walls, 1, 0, Directions.South, true);
+        TestWall(walls, 1, 0, Directions.East, false);
+        TestWall(walls, 1, 0, Directions.West, false);
+        TestWall(walls, 1, 0, Directions.North, false);
+
+        TestWall(walls, 0, 1, Directions.South, false);
+        TestWall(walls, 0, 1, Directions.East, false);
+        TestWall(walls, 0, 1, Directions.West, true);
+        TestWall(walls, 0, 1, Directions.North, false);
+
+        TestWall(walls, Size.x - 1, 0, Directions.South, true);
+        TestWall(walls, Size.x - 1, 0, Directions.East, true);
+        TestWall(walls, Size.x - 1, 0, Directions.West, false);
+        TestWall(walls, Size.x - 1, 0, Directions.North, false);
+
+        TestWall(walls, 0, Size.y - 1, Directions.South, false);
+        TestWall(walls, 0, Size.y - 1, Directions.East, false);
+        TestWall(walls, 0, Size.y - 1, Directions.West, true);
+        TestWall(walls, 0, Size.y - 1, Directions.North, true);
+
+        TestWall(walls, Size.x - 1, Size.y - 1, Directions.South, false);
+        TestWall(walls, Size.x - 1, Size.y - 1, Directions.East, true);
+        TestWall(walls, Size.x - 1, Size.y - 1, Directions.West, false);
+        TestWall(walls, Size.x - 1, Size.y - 1, Directions.North, true);
+    }
+
+    /// <summary>
+    /// Test is the wall generation was right
+    /// </summary>
+    private void TestWall(Dictionary<Vector2Int, WallData> walls, int X, int Y, Directions direction, bool hasWall)
+    {
+        var location = new Vector2Int(X, Y);
+        var has = HasWall(walls, location, direction);
+
+        if (has != hasWall)
+        {
+            Debug.LogError("Invalid WallTest in " + location + " for direction: " + direction + " expected: " + hasWall + " but received:" + has);
+        }
+    }
+
     #endregion // BOARD_MAP_GENERATION
 }

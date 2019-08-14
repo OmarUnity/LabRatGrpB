@@ -9,8 +9,12 @@ using Unity.Mathematics;
 public struct LbBoard : IComponentData
 {
     /// <summary>
-    /// Board size
+    /// Board's size X
     /// </summary>
-    public int2 Size;
+    public byte SizeX;
 
+    /// <summary>
+    /// Board's size Y
+    /// </summary>
+    public byte SizeY;
 }
