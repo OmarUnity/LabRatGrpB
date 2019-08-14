@@ -135,7 +135,9 @@ public struct Move_Job : IJobChunk
     [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation>                 translationType;
     [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed>  movementSpeedType;
     [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget>          distanceToTargetType;
-    [ReadOnly] public ArchetypeChunkEntityType entityType;
+
+    // If you need to reach some Entity from an IJobChunk, 
+    //[ReadOnly] public ArchetypeChunkComponentType<Entity> entityType;
 
     public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
     {
@@ -143,7 +145,7 @@ public struct Move_Job : IJobChunk
         var chunkTranslations       = chunk.GetNativeArray( translationType );
         var chunkMovementSpeed      = chunk.GetNativeArray( movementSpeedType );
         var chunkDistanceToTarget   = chunk.GetNativeArray( distanceToTargetType );
-        var chunkEntity             = chunk.GetNativeArray( entityType );
+        //var chunkEntity             = chunk.GetNativeArray( entityType );
 
         for (var i = 0; i < chunk.Count; i++)
         {
@@ -163,6 +165,7 @@ public struct Move_Job : IJobChunk
                 chunkTranslations[i] = translation;
                 
                 distanceToTarget.Value = 0;
+                chunkDistanceToTarget[ i ] = distanceToTarget;
             }
         }
     }
