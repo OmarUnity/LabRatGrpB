@@ -246,13 +246,16 @@ public class BoardBuilderWindow : EditorWindow
             BoardAuthoring.AddWallToDictionary(ref wallMap, wall);
         }
 
-        //float offset = 1f / 3f;
+        // Setup home bases
 
-        //// setup home bases
-        //CellAt(boardSize.x * offset, boardSize.y * offset).SetHomebase(0);
-        //CellAt(boardSize.x * 2f * offset, boardSize.y * 2f * offset).SetHomebase(1);
-        //CellAt(boardSize.x * offset, boardSize.y * 2f * offset).SetHomebase(2);
-        //CellAt(boardSize.x * 2f * offset, boardSize.y * offset).SetHomebase(3);
+        var offset = 1f / 3f;
+        var placeX = m_SizeX * offset;
+        var placeY = m_SizeY * offset;
+
+        PlaceHomebase(Players.Player1, placeX, placeY, boardTransform);
+        PlaceHomebase(Players.Player2, placeX * 2f, placeY, boardTransform);
+        PlaceHomebase(Players.Player3, placeX * 2f, placeY * 2f, boardTransform);
+        PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform);
 
         //SpawnerAt(MouseSpawner, 0, 0, Quaternion.identity);
         //SpawnerAt(MouseSpawner, boardSize.x - 1, boardSize.y - 1, Quaternion.Euler(180, 0, 0));
@@ -271,6 +274,50 @@ public class BoardBuilderWindow : EditorWindow
 
         Debug.Log("Board Generated!");
         m_IsGenerating = false;
+    }
+
+    /// <summary>
+    /// Place a homebase for the given player in the location
+    /// </summary>
+    private void PlaceHomebase(Players player, float X, float Y, Transform parent)
+    {
+        Vector2Int location = new Vector2Int((int)X, (int)Y);
+        var prefab = GetHomebasePrefab(player);
+
+        var obj = Instantiate(prefab, Vector3.zero, Quaternion.identity, parent);
+        obj.name = "homebase_" + player;
+
+        var center = new Vector3(
+            location.x,             
+            0.0f,                   // Change when we have a height variable
+            location.y);
+
+        obj.transform.localPosition = center;
+        obj.transform.SetParent(parent);
+    }
+
+    /// <summary>
+    /// Get the homebse prefab for the player
+    /// </summary>
+    private GameObject GetHomebasePrefab(Players player)
+    {
+        switch(player)
+        {
+            case Players.Player1:
+                return m_Homebase1;
+
+            case Players.Player2:
+                return m_Homebase2;
+
+            case Players.Player3:
+                return m_Homebase3;
+
+            case Players.Player4:
+                return m_Homebase4;
+
+            default:
+                throw new Exception("Invalid player!");
+        }
     }
 
     /// <summary>
