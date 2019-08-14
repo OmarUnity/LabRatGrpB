@@ -27,7 +27,8 @@ public class MovementSystem : JobComponentSystem
             All = new ComponentType[] {
                                         ComponentType.ReadOnly<LbNorthDirection>(),
                                         ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation)
+                                        typeof(Translation),
+                                        ComponentType.ReadWrite<LbDistanceToTarget>()
                                       }
         };
 
@@ -40,7 +41,8 @@ public class MovementSystem : JobComponentSystem
             All = new ComponentType[] {
                                         ComponentType.ReadOnly<LbSouthDirection>(),
                                         ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation)
+                                        typeof(Translation),
+                                        ComponentType.ReadWrite<LbDistanceToTarget>()
                                       }
         };
 
@@ -53,7 +55,8 @@ public class MovementSystem : JobComponentSystem
             All = new ComponentType[] {
                                         ComponentType.ReadOnly<LbWestDirection>(),
                                         ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation)
+                                        typeof(Translation),
+                                        ComponentType.ReadWrite<LbDistanceToTarget>()
                                       }
         };
 
@@ -66,7 +69,8 @@ public class MovementSystem : JobComponentSystem
             All = new ComponentType[] {
                                         ComponentType.ReadOnly<LbEastDirection>(),
                                         ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation)
+                                        typeof(Translation),
+                                        ComponentType.ReadWrite<LbDistanceToTarget>()
                                       }
         };
 
@@ -86,7 +90,8 @@ public class MovementSystem : JobComponentSystem
             //commandBuffer       = m_Barrier.CreateCommandBuffer().ToConcurrent(),
 
             translationType     = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true )
+            movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true ),
+            distanceToTargetType= GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_NorthMovement, inputDeps);
 
         return moveNorth_Job;
@@ -102,21 +107,33 @@ public struct Move_Job : IJobChunk
 
     public ArchetypeChunkComponentType<Translation>                 translationType;
     [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed>  movementSpeedType;
-
+    public ArchetypeChunkComponentType<LbDistanceToTarget>          distanceToTargetType;
+    
     public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
     {
         // Get information of a certain chunk
         var chunkTranslations   = chunk.GetNativeArray( translationType );
         var chunkMovementSpeed  = chunk.GetNativeArray( movementSpeedType );
+        var chunkDistanceToTarget  = chunk.GetNativeArray( distanceToTargetType );
 
         for (var i = 0; i < chunk.Count; i++)
         {
             var translation         = chunkTranslations[ i ];
             var movementSpeed       = chunkMovementSpeed[ i ];
-
-            chunkTranslations[i]    = new Translation {
-                Value = translation.Value + (direction * movementSpeed.Value * deltaTime)
-            };
+            var distanceToTarget    = chunkDistanceToTarget[ i ];
+            
+            translation.Value += direction * movementSpeed.Value * deltaTime;
+            distanceToTarget.Value -= movementSpeed.Value * deltaTime;
+            
+            chunkDistanceToTarget[i] = distanceToTarget;
+            chunkTranslations[i] = translation;
+            
+            if (distanceToTarget.Value <= 0)
+            {
+                translation.Value = math.round(translation.Value);
+                chunkTranslations[i] = translation;
+                // TODO LbReachCell
+            }
         }
     }
 }

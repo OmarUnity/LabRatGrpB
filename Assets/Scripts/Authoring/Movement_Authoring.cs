@@ -23,5 +23,6 @@ public class Movement_Authoring : MonoBehaviour, IConvertGameObjectToEntity
             dstManager.AddComponentData( entity, new LbWestDirection() );
 
         dstManager.AddComponentData( entity, new LbMovementSpeed { Value = speed } );
+        dstManager.AddComponentData( entity, new LbDistanceToTarget() { Value = 1 } );
     }
 }
