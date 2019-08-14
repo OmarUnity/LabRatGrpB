@@ -131,6 +131,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cat_East
       objectReference: {fileID: 0}
+    - target: {fileID: 1377909340170110, guid: 19268829cf75c415f8f14765efcab529, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4947532303769016, guid: 19268829cf75c415f8f14765efcab529, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1
@@ -378,6 +382,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cat_South
       objectReference: {fileID: 0}
+    - target: {fileID: 1377909340170110, guid: 19268829cf75c415f8f14765efcab529, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4947532303769016, guid: 19268829cf75c415f8f14765efcab529, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -512,6 +520,10 @@ PrefabInstance:
     - target: {fileID: 1377909340170110, guid: 19268829cf75c415f8f14765efcab529, type: 3}
       propertyPath: m_Name
       value: Cat_West
+      objectReference: {fileID: 0}
+    - target: {fileID: 1377909340170110, guid: 19268829cf75c415f8f14765efcab529, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4947532303769016, guid: 19268829cf75c415f8f14765efcab529, type: 3}
       propertyPath: m_LocalPosition.x

@@ -4,6 +4,7 @@ using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.Collections.LowLevel.Unsafe;
 
 public class MovementSystem : JobComponentSystem
 {
@@ -75,8 +76,6 @@ public class MovementSystem : JobComponentSystem
         };
 
         m_Group_EastMovement = GetEntityQuery( query_East );
-
-        m_Group = GetEntityQuery(new EntityQueryDesc[] { query_North, query_South, query_West, query_East });
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -92,17 +91,17 @@ public class MovementSystem : JobComponentSystem
             translationType     = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true ),
             distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
-        };
+        }.Schedule(m_Group_NorthMovement, inputDeps);
 
         var job_South = new Move_Job
         {
             deltaTime = deltaTime,
             direction = new float3(0, 0, -1),
-            
+
             translationType = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
-            distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
-        };
+            distanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
+        }.Schedule(m_Group_SouthMovement, inputDeps);
 
         var job_West = new Move_Job
         {
@@ -112,7 +111,7 @@ public class MovementSystem : JobComponentSystem
             translationType = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
             distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
-        };
+        }.Schedule(m_Group_WestMovement, inputDeps);
 
         var job_East = new Move_Job
         {
@@ -122,14 +121,9 @@ public class MovementSystem : JobComponentSystem
             translationType = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
             distanceToTargetType     = GetArchetypeChunkComponentType<LbDistanceToTarget>()
-        };
+        }.Schedule(m_Group_EastMovement, inputDeps);
 
-        inputDeps = job_North.Schedule( m_Group_NorthMovement, inputDeps );
-        inputDeps = job_South.Schedule( m_Group_SouthMovement, inputDeps );
-        inputDeps = job_West.Schedule ( m_Group_WestMovement, inputDeps );
-        inputDeps = job_East.Schedule ( m_Group_EastMovement, inputDeps );
-
-        return inputDeps;
+        return JobHandle.CombineDependencies(JobHandle.CombineDependencies(job_North, job_South, job_East), job_West);
     }
 }
 
@@ -138,16 +132,18 @@ public struct Move_Job : IJobChunk
     public float deltaTime;
     public float3 direction;
 
-    public ArchetypeChunkComponentType<Translation>                 translationType;
+    [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation>                 translationType;
     [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed>  movementSpeedType;
-    public ArchetypeChunkComponentType<LbDistanceToTarget>          distanceToTargetType;
-    
+    [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget>          distanceToTargetType;
+    [ReadOnly] public ArchetypeChunkEntityType entityType;
+
     public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
     {
         // Get information of a certain chunk
-        var chunkTranslations   = chunk.GetNativeArray( translationType );
-        var chunkMovementSpeed  = chunk.GetNativeArray( movementSpeedType );
-        var chunkDistanceToTarget  = chunk.GetNativeArray( distanceToTargetType );
+        var chunkTranslations       = chunk.GetNativeArray( translationType );
+        var chunkMovementSpeed      = chunk.GetNativeArray( movementSpeedType );
+        var chunkDistanceToTarget   = chunk.GetNativeArray( distanceToTargetType );
+        var chunkEntity             = chunk.GetNativeArray( entityType );
 
         for (var i = 0; i < chunk.Count; i++)
         {
@@ -165,7 +161,8 @@ public struct Move_Job : IJobChunk
             {
                 translation.Value = math.round(translation.Value);
                 chunkTranslations[i] = translation;
-                // TODO LbReachCell
+                
+                distanceToTarget.Value = 0;
             }
         }
     }
