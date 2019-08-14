@@ -11,7 +11,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 {
     public Vector2Int Size;
 
-    private Dictionary<byte, short> dirmap = new Dictionary<byte, short>()
+    private readonly Dictionary<byte, short> m_DirMap = new Dictionary<byte, short>()
     {
         {0x0, 0x1B},
         {0x1, 0x5B},
@@ -41,21 +41,20 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             SizeY = (byte)Size.y
         });
         
-        Entity DirMapEntity = dstManager.CreateEntity(typeof(LbDirectionMap));
-        DynamicBuffer<LbDirectionMap> dirMapbuffer = dstManager.GetBuffer<LbDirectionMap>(DirMapEntity);
+        var dirMapEntity = dstManager.CreateEntity(typeof(LbDirectionMap));
+        var dirMapbuffer = dstManager.GetBuffer<LbDirectionMap>(dirMapEntity);
 
         var cells = GetCells();
         var walls = GetWalls();
 
-        // Example
         foreach(var cell in cells)
         {
-            bool hasNorthWall = HasWall(walls, cell, Directions.North);
-            bool hasSouthWall = HasWall(walls, cell, Directions.South);
-            bool hasWestWall = HasWall(walls, cell, Directions.West);
-            bool hasEasrsWall = HasWall(walls, cell, Directions.East);
+            var hasNorthWall = HasWall(walls, cell, Directions.North);
+            var hasSouthWall = HasWall(walls, cell, Directions.South);
+            var hasWestWall = HasWall(walls, cell, Directions.West);
+            var hasEasrsWall = HasWall(walls, cell, Directions.East);
 
-           bool[] hasWallArray = new []
+            var hasWallArray = new[]
             {
                 HasWall(walls, cell, Directions.North),
                 HasWall(walls, cell, Directions.South),
@@ -63,24 +62,22 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 HasWall(walls, cell, Directions.East)
             };
 
-           /*
-            bool[] hasWallArray = new []
-            {
-                true,
-                false,
-                true,
-                false
-            };*/
+            /*
+             bool[] hasWallArray = new []
+             {
+                 true,
+                 false,
+                 true,
+                 false
+             };*/
 
 
-            BitArray bitArrayWalls = new BitArray(hasWallArray);
+            var bitArrayWalls = new BitArray(hasWallArray);
 
-            byte[] bytesWalls = new byte[1];
+            var bytesWalls = new byte[1];
             bitArrayWalls.CopyTo(bytesWalls, 0);
 
-            Debug.Log(bytesWalls[0]);
-            dirMapbuffer.Add(dirmap[bytesWalls[0]]);
-            // TODO ....
+            dirMapbuffer.Add(m_DirMap[bytesWalls[0]]);
         }
     }
 
