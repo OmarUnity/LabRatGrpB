@@ -15,9 +15,13 @@ public class BoardBuilderWindow : EditorWindow
 
     private const string kCellName = "Editor.CellPrefab";
     private const string kWallName = "Editor.WallPrefab";
-    private const string kHomebaseName = "Editor.HomebasePrefab";
     private const string kMouseSpawnerName = "Editor.MouseSpawnerPrefab";
     private const string kCatSpawnerName = "Editor.CatSpawnerPrefab";
+
+    private const string kHomebaseName1 = "Editor.HomeBase1";
+    private const string kHomebaseName2 = "Editor.HomeBase2";
+    private const string kHomebaseName3 = "Editor.HomeBase3";
+    private const string kHomebaseName4 = "Editor.HomeBase4";
 
     private int m_SizeX = 100;
     private int m_SizeY = 100;
@@ -26,9 +30,14 @@ public class BoardBuilderWindow : EditorWindow
 
     private GameObject m_CellPrefab = null;
     private GameObject m_WallPrefab = null;
-    private GameObject m_HomebasePrefab = null;
+
     private GameObject m_MouseSpawnerPrefab = null;
     private GameObject m_CatSpawnerPrefab = null;
+
+    private GameObject m_Homebase1 = null;
+    private GameObject m_Homebase2 = null;
+    private GameObject m_Homebase3 = null;
+    private GameObject m_Homebase4 = null;
 
     private bool m_IsGenerating = false;
     private int m_GeneratingProgress = 0;
@@ -72,9 +81,20 @@ public class BoardBuilderWindow : EditorWindow
         GUILayout.Space(5.0f);
         GUILayout.Label("PREFABS");
 
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Board");
         ObjectField(kCellName, "Cell Prefab", ref m_CellPrefab);
         ObjectField(kWallName, "Wall Prefab", ref m_WallPrefab);
-        ObjectField(kHomebaseName, "Homebase Prefab", ref m_HomebasePrefab);
+
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Homebases");
+        ObjectField(kHomebaseName1, "Homebase1 Prefab", ref m_Homebase1);
+        ObjectField(kHomebaseName2, "Homebase2 Prefab", ref m_Homebase2);
+        ObjectField(kHomebaseName3, "Homebase3 Prefab", ref m_Homebase3);
+        ObjectField(kHomebaseName4, "Homebase4 Prefab", ref m_Homebase4);
+
+        GUILayout.Space(3.0f);
+        GUILayout.Label("Spawners");
         ObjectField(kMouseSpawnerName, "Mouse Spawner Prefab", ref m_MouseSpawnerPrefab);
         ObjectField(kCatSpawnerName, "Cat Spawner Prefab", ref m_CatSpawnerPrefab);
 
@@ -112,7 +132,10 @@ public class BoardBuilderWindow : EditorWindow
 
         LoadObject(kCellName, ref m_CellPrefab);
         LoadObject(kWallName, ref m_WallPrefab);
-        LoadObject(kHomebaseName, ref m_HomebasePrefab);
+        LoadObject(kHomebaseName1, ref m_Homebase1);
+        LoadObject(kHomebaseName2, ref m_Homebase2);
+        LoadObject(kHomebaseName3, ref m_Homebase3);
+        LoadObject(kHomebaseName4, ref m_Homebase4);
         LoadObject(kMouseSpawnerName, ref m_MouseSpawnerPrefab);
         LoadObject(kCatSpawnerName, ref m_CatSpawnerPrefab);
     }
@@ -203,6 +226,20 @@ public class BoardBuilderWindow : EditorWindow
             var direction = GetRandomDirection();
 
             if (BoardAuthoring.HasWall(wallMap, location, direction))
+                continue;
+
+            int count = 0;
+            if (direction != Directions.North && BoardAuthoring.HasWall(wallMap, location, Directions.North))
+                count++;
+            if (direction != Directions.East && BoardAuthoring.HasWall(wallMap, location, Directions.East))
+                count++;
+            if (direction != Directions.South && BoardAuthoring.HasWall(wallMap, location, Directions.South))
+                count++;
+            if (direction != Directions.West && BoardAuthoring.HasWall(wallMap, location, Directions.West))
+                count++;
+
+            // Avoid closed cells
+            if (count >= 3)
                 continue;
 
             var wall = PlaceWall(direction, location, boardTransform);
