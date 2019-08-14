@@ -4,7 +4,7 @@
 /// Used by entities that are moving in the Up direction
 /// 3D Vector (0, 0, 1)
 /// </summary>
-public struct LbUpDirection : IComponentData
+public struct LbNorthDirection : IComponentData
 {
 }
 
@@ -12,7 +12,7 @@ public struct LbUpDirection : IComponentData
 /// Used by entities that are moving in the Down direction
 /// 3D Vector (0, 0, -1)
 /// </summary>
-public struct LbDownDirection : IComponentData
+public struct LbSouthDirection : IComponentData
 {
 }
 
@@ -20,7 +20,7 @@ public struct LbDownDirection : IComponentData
 /// Used by entities that are moving in the Up direction
 /// 3D Vector (1, 0, 0)
 /// </summary>
-public struct LbRightDirection : IComponentData
+public struct LbEastDirection : IComponentData
 {
 }
 
@@ -28,6 +28,6 @@ public struct LbRightDirection : IComponentData
 /// Used by entities that are moving in the Left direction
 /// 3D Vector (-1, 0, 0)
 /// </summary>
-public struct LbLeftDirection : IComponentData
+public struct LbWestDirection : IComponentData
 {
 }
