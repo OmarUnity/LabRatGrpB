@@ -6,4 +6,5 @@
 public class Cell : MonoBehaviour
 {
     public Vector2Int location;
+    public bool isHole;
 }

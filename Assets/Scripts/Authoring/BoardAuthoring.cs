@@ -107,6 +107,21 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 	}
 
     /// <summary>
+    /// Get the map of cells
+    /// </summary>
+    /// <returns></returns>
+    public Dictionary<Vector2Int, Cell> GetCellMap()
+    {
+        var map = new Dictionary<Vector2Int, Cell>();
+
+        var cellObjs = GetComponentsInChildren<Cell>();
+        foreach (var cell in cellObjs)
+            map.Add(cell.location, cell);
+
+        return map;
+    }
+
+    /// <summary>
     /// Get the walls map
     /// </summary>
     public Dictionary<Vector2Int, WallData> GetWalls()

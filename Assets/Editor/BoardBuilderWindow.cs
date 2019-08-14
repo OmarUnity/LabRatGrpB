@@ -15,8 +15,7 @@ public class BoardBuilderWindow : EditorWindow
 
     private const string kCellName = "Editor.CellPrefab";
     private const string kWallName = "Editor.WallPrefab";
-    private const string kMouseSpawnerName = "Editor.MouseSpawnerPrefab";
-    private const string kCatSpawnerName = "Editor.CatSpawnerPrefab";
+    private const string kSpawnerName = "Editor.SpawnerPrefab";
 
     private const string kHomebaseName1 = "Editor.HomeBase1";
     private const string kHomebaseName2 = "Editor.HomeBase2";
@@ -31,8 +30,7 @@ public class BoardBuilderWindow : EditorWindow
     private GameObject m_CellPrefab = null;
     private GameObject m_WallPrefab = null;
 
-    private GameObject m_MouseSpawnerPrefab = null;
-    private GameObject m_CatSpawnerPrefab = null;
+    private GameObject m_SpawnerPrefab = null;
 
     private GameObject m_Homebase1 = null;
     private GameObject m_Homebase2 = null;
@@ -85,18 +83,14 @@ public class BoardBuilderWindow : EditorWindow
         GUILayout.Label("Board");
         ObjectField(kCellName, "Cell Prefab", ref m_CellPrefab);
         ObjectField(kWallName, "Wall Prefab", ref m_WallPrefab);
+        ObjectField(kSpawnerName, "Spawner Prefab", ref m_SpawnerPrefab);
 
         GUILayout.Space(3.0f);
-        GUILayout.Label("Homebases");
+        GUILayout.Label("Home bases");
         ObjectField(kHomebaseName1, "Homebase1 Prefab", ref m_Homebase1);
         ObjectField(kHomebaseName2, "Homebase2 Prefab", ref m_Homebase2);
         ObjectField(kHomebaseName3, "Homebase3 Prefab", ref m_Homebase3);
         ObjectField(kHomebaseName4, "Homebase4 Prefab", ref m_Homebase4);
-
-        GUILayout.Space(3.0f);
-        GUILayout.Label("Spawners");
-        ObjectField(kMouseSpawnerName, "Mouse Spawner Prefab", ref m_MouseSpawnerPrefab);
-        ObjectField(kCatSpawnerName, "Cat Spawner Prefab", ref m_CatSpawnerPrefab);
 
         GUILayout.Space(25.0f);
 
@@ -132,12 +126,12 @@ public class BoardBuilderWindow : EditorWindow
 
         LoadObject(kCellName, ref m_CellPrefab);
         LoadObject(kWallName, ref m_WallPrefab);
+        LoadObject(kSpawnerName, ref m_SpawnerPrefab);
+
         LoadObject(kHomebaseName1, ref m_Homebase1);
         LoadObject(kHomebaseName2, ref m_Homebase2);
         LoadObject(kHomebaseName3, ref m_Homebase3);
         LoadObject(kHomebaseName4, ref m_Homebase4);
-        LoadObject(kMouseSpawnerName, ref m_MouseSpawnerPrefab);
-        LoadObject(kCatSpawnerName, ref m_CatSpawnerPrefab);
     }
 
     /// <summary>
@@ -147,6 +141,12 @@ public class BoardBuilderWindow : EditorWindow
     {
         if (IsObjectInvalid("Cell", m_CellPrefab)) return;
         if (IsObjectInvalid("Wall", m_WallPrefab)) return;
+        if (IsObjectInvalid("Spawner", m_SpawnerPrefab)) return;
+        if (IsObjectInvalid("Homebase1", m_Homebase1)) return;
+        if (IsObjectInvalid("Homebase2", m_Homebase2)) return;
+        if (IsObjectInvalid("Homebase3", m_Homebase3)) return;
+        if (IsObjectInvalid("Homebase4", m_Homebase4)) return;
+
 
         m_IsGenerating = true;
         m_GeneratingProgress = 0;
@@ -193,6 +193,7 @@ public class BoardBuilderWindow : EditorWindow
                 if (cell == null)
                     cell = obj.AddComponent<Cell>();
                 cell.location = coord;
+                cell.isHole = false;
 
                 // Position the block
                 obj.transform.localPosition = new Vector3(
@@ -247,7 +248,6 @@ public class BoardBuilderWindow : EditorWindow
         }
 
         // Setup home bases
-
         var offset = 1f / 3f;
         var placeX = m_SizeX * offset;
         var placeY = m_SizeY * offset;
@@ -257,18 +257,36 @@ public class BoardBuilderWindow : EditorWindow
         PlaceHomebase(Players.Player3, placeX * 2f, placeY * 2f, boardTransform);
         PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform);
 
-        //SpawnerAt(MouseSpawner, 0, 0, Quaternion.identity);
-        //SpawnerAt(MouseSpawner, boardSize.x - 1, boardSize.y - 1, Quaternion.Euler(180, 0, 0));
-        //SpawnerAt(CatSpawner, 0, boardSize.y - 1, Quaternion.Euler(0, 0, 0));
-        //SpawnerAt(CatSpawner, boardSize.x - 1, 0, Quaternion.Euler(0, 0, 0));
+        // Setup spawners
+        PlaceSpawner(0, 0, boardTransform, Quaternion.identity);
+        PlaceSpawner(m_SizeX - 1, 0, boardTransform, Quaternion.Euler(0, 0, 0));
+        PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.Euler(180, 0, 0));
+        PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0));
 
-        //int numHoles = Random.Range(0, 4);
-        //for (int i = 0; i < numHoles; ++i)
-        //{
-        //    var coord = new Vector2Int(Random.Range(0, boardSize.x), Random.Range(0, boardSize.y));
-        //    if (coord.x > 0 && coord.y > 0 && coord.x < boardSize.x - 1 && coord.y < boardSize.y - 1 && board.CellAtCoord(coord).IsEmpty())
-        //        board.RemoveCell(coord);
-        //}
+        // Setup holes
+        var cellMap = board.GetCellMap();
+
+        int numHoles = UnityEngine.Random.Range(0, 4);
+        for (int i = 0; i < numHoles; ++i)
+        {
+            var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
+            if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
+            {
+                var cell = cellMap[coord];
+                
+                var holeObject = new GameObject();
+                holeObject.name = "hole_" + coord;
+                holeObject.transform.SetParent(boardTransform);
+                holeObject.transform.localPosition = cell.transform.localPosition;
+
+                var holeCell = holeObject.AddComponent<Cell>();
+                holeCell.location = coord;
+                holeCell.isHole = true;
+
+                DestroyImmediate(cell.gameObject);
+            }
+                
+        }
 
         UnityEngine.Random.state = oldState;
 
@@ -277,11 +295,30 @@ public class BoardBuilderWindow : EditorWindow
     }
 
     /// <summary>
+    /// Place a spawner in the world
+    /// </summary>
+    private void PlaceSpawner(int X, int Y, Transform parent, Quaternion quaternion)
+    {
+        var location = new Vector2Int(X, Y);
+
+        var obj = Instantiate(m_SpawnerPrefab, Vector3.zero, quaternion, parent);
+        obj.name = "spawner_" + location;
+
+        var center = new Vector3(
+            location.x,
+            0.75f,                   // Change when we have a height variable
+            location.y);
+
+        obj.transform.localPosition = center;
+        obj.transform.SetParent(parent);
+    }
+
+    /// <summary>
     /// Place a homebase for the given player in the location
     /// </summary>
     private void PlaceHomebase(Players player, float X, float Y, Transform parent)
     {
-        Vector2Int location = new Vector2Int((int)X, (int)Y);
+        var location = new Vector2Int((int)X, (int)Y);
         var prefab = GetHomebasePrefab(player);
 
         var obj = Instantiate(prefab, Vector3.zero, Quaternion.identity, parent);
