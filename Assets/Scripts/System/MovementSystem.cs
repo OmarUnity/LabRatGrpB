@@ -72,14 +72,14 @@ public class MovementSystem : JobComponentSystem
 
         m_Group_EastMovement = GetEntityQuery( query_East );
 
-        //m_Group = GetEntityQuery(new EntityQueryDesc[] { query_North, query_South, query_West, query_East });
+        m_Group = GetEntityQuery(new EntityQueryDesc[] { query_North, query_South, query_West, query_East });
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         float deltaTime = Mathf.Clamp(Time.deltaTime, 0.0f, 0.3f);
 
-        var moveNorth_Job = new Move_Job
+        var job_North = new Move_Job
         {
             deltaTime           = deltaTime,
             direction           = new float3(0, 0, 1),
@@ -87,9 +87,41 @@ public class MovementSystem : JobComponentSystem
 
             translationType     = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true )
-        }.Schedule(m_Group_NorthMovement, inputDeps);
+        };
 
-        return moveNorth_Job;
+        var job_South = new Move_Job
+        {
+            deltaTime = deltaTime,
+            direction = new float3(0, 0, -1),
+            
+            translationType = GetArchetypeChunkComponentType<Translation>(),
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+        };
+
+        var job_West = new Move_Job
+        {
+            deltaTime = deltaTime,
+            direction = new float3(-1, 0, 0),
+
+            translationType = GetArchetypeChunkComponentType<Translation>(),
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+        };
+
+        var job_East = new Move_Job
+        {
+            deltaTime = deltaTime,
+            direction = new float3(1, 0, 0),
+
+            translationType = GetArchetypeChunkComponentType<Translation>(),
+            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true)
+        };
+
+        inputDeps = job_North.Schedule( m_Group_NorthMovement, inputDeps );
+        inputDeps = job_South.Schedule( m_Group_SouthMovement, inputDeps );
+        inputDeps = job_West.Schedule ( m_Group_WestMovement, inputDeps );
+        inputDeps = job_East.Schedule ( m_Group_EastMovement, inputDeps );
+
+        return inputDeps;
     }
 }
 
@@ -97,8 +129,6 @@ public struct Move_Job : IJobChunk
 {
     public float deltaTime;
     public float3 direction;
-
-    //public EntityCommandBuffer.Concurrent commandBuffer;
 
     public ArchetypeChunkComponentType<Translation>                 translationType;
     [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed>  movementSpeedType;
