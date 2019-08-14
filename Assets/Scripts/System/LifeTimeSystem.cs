@@ -1,12 +1,10 @@
-﻿using Unity.Collections;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
-using Unity.Transforms;
 
-// This system updates all entities in the scene with Translation, LbMovementSpeed and LbFall component.
+// This system updates all entities in the scene with LbLifetime component.
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-public class FallSystem : JobComponentSystem
+public class LifeTimeSystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
 
@@ -17,16 +15,22 @@ public class FallSystem : JobComponentSystem
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
     //[BurstCompile]
-    struct FallJob : IJobForEachWithEntity<Translation, LbMovementSpeed, LbFall>
+    struct LifeTimeJob : IJobForEachWithEntity<LbLifetime>
     {
         public float DeltaTime;
 
         public EntityCommandBuffer.Concurrent CommandBuffer;
 
-        public void Execute(Entity entity, int jobIndex, ref Translation translation, ref LbMovementSpeed speed, [ReadOnly] ref LbFall fallTag)
+        public void Execute(Entity entity, int jobIndex, ref LbLifetime lifeTime)
         {
-            speed.Value -= 4.9f * DeltaTime; // 9.8/2
-            translation.Value.y += speed.Value * DeltaTime;
+            lifeTime.Value -= DeltaTime;
+
+            if (lifeTime.Value < 0.0f)
+            {
+                CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
+                //CommandBuffer.RemoveComponent<LbLifetime>(jobIndex,entity);
+                //CommandBuffer.RemoveComponent<LbFall>(jobIndex,entity);
+            }
         }
     }
 
@@ -35,7 +39,7 @@ public class FallSystem : JobComponentSystem
     {
         var commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent();
 
-        var job = new FallJob
+        var job = new LifeTimeJob
         {
             DeltaTime = Time.deltaTime,
             CommandBuffer = commandBuffer,

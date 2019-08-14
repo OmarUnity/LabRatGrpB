@@ -1,21 +1,17 @@
-﻿using System;
-using Unity.Burst;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
-using Unity.Transforms;
-using UnityEngine;
-using Random = Unity.Mathematics.Random;
 
-// This system updates all entities in the scene with both a RotationSpeed_SpawnAndRemove and Rotation component.
+// This system updates all entities in the scene with LbDestroy component.
+//[UpdateBefore(typeof(InitializationSystemGroup))]
+[UpdateInGroup(typeof(InitializationSystemGroup))]
 public class DestroySystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
 
     protected override void OnCreate()
     {
-        m_Barrier = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        m_Barrier = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
     }
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
