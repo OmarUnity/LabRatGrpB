@@ -30,7 +30,11 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     }
 
     #region BOARD_MAP_GENERATION
-    struct WallData{
+    /// <summary>
+    /// Data to track walls in a board location
+    /// </summary>
+    public struct WallData
+    {
         public Wall Vertical;
         public Wall Horizontal;
     }
@@ -53,39 +57,47 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     /// <summary>
     /// Get the walls map
     /// </summary>
-    private Dictionary<Vector2Int, WallData> GetWalls()
+    public Dictionary<Vector2Int, WallData> GetWalls()
     {
         Dictionary<Vector2Int, WallData> wallMap = new Dictionary<Vector2Int, WallData>();
 
         var walls = GetComponentsInChildren<Wall>();
         foreach (var wall in walls)
-        {
-            var location = wall.location;
-            if (!wallMap.ContainsKey(location))
-            {
-                wallMap.Add(location, new WallData());
-            }
-
-            var data = wallMap[location];
-            if (wall.isHorizontal)
-            {
-                data.Horizontal = wall;
-            }
-            else
-            {
-                data.Vertical = wall;
-            }
-
-            wallMap[location] = data;
-        }
+            AddWallToDictionary(ref wallMap, wall);
 
         return wallMap;
     }
 
     /// <summary>
+    /// Add a wall to the dictionary
+    /// </summary>
+    /// <param name="Map"></param>
+    /// <param name="wall"></param>
+    public static void AddWallToDictionary(ref Dictionary<Vector2Int, WallData> Map, Wall wall)
+    {
+        var location = wall.location;
+        if (!Map.ContainsKey(location))
+        {
+            Map.Add(location, new WallData());
+        }
+
+        var data = Map[location];
+        if (wall.isHorizontal)
+        {
+            data.Horizontal = wall;
+        }
+        else
+        {
+            data.Vertical = wall;
+        }
+
+        Map[location] = data;
+    }
+
+    /// <summary>
     /// Return true if there is a wall in the given direction starting in the given location
     /// </summary>
-    private bool HasWall(Dictionary<Vector2Int, WallData> walls, Vector2Int location, Directions direction)
+    public static bool HasWall(Dictionary<Vector2Int, WallData> walls, Vector2Int location, Directions direction)
     {
         switch(direction)
         {
