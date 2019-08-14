@@ -10,6 +10,7 @@ public class Movement_Authoring : MonoBehaviour, IConvertGameObjectToEntity
     public enum MovementDirection { Up, Down, Right, Left };
     public MovementDirection direction;
     public float speed = 1.0f;
+    public bool reachFlag = false;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
@@ -23,5 +24,11 @@ public class Movement_Authoring : MonoBehaviour, IConvertGameObjectToEntity
             dstManager.AddComponentData( entity, new LbWestDirection() );
 
         dstManager.AddComponentData( entity, new LbMovementSpeed { Value = speed } );
+
+        if (reachFlag)
+        {
+            dstManager.AddComponent<LbReachCell>(entity);
+            
+        } 
     }
 }
