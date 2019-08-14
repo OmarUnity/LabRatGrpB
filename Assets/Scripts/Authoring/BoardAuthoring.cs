@@ -15,7 +15,11 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     // To a good runtime representation (Represented in radians)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        dstManager.AddComponentData(entity, new LbBoard { Size = new int2(Size.x, Size.y) });
+        dstManager.AddComponentData(entity, new LbBoard
+        {
+            SizeX = (byte)Size.x,
+            SizeY = (byte)Size.y
+        });
 
         var cells = GetCells();
         var walls = GetWalls();
