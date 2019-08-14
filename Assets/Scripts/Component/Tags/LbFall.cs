@@ -3,6 +3,6 @@
 /// <summary>
 /// Tag for entities that are falling from the board
 /// </summary>
-public class LbFall : IComponentData
+public struct LbFall : IComponentData
 {
 }
