@@ -5,6 +5,12 @@
 /// </summary>
 public class Cell : MonoBehaviour
 {
+    [HideInInspector]
     public Vector2Int location;
-    public bool isHole;
+    [HideInInspector]
+    public bool isHole = false;
+    [HideInInspector]
+    public bool hasSpawner = false;
+    [HideInInspector]
+    public GameObject homebase = null;
 }

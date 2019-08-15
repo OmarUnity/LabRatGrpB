@@ -29,6 +29,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     };
 
     private const short kHoleFlag = 0x100;
+    private const short kHomebaseFlag = 0x800;
 
     // The MonoBehaviour data is converted to ComponentData on the entity.
     // We are specifically transforming from a good editor representation of the data (Represented in degrees)
@@ -65,7 +66,30 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 
             short bufferValue = (short)m_DirList[bytesWalls[0]];
             if (cell.isHole)
+            {
                 bufferValue |= kHoleFlag;
+            }
+
+            if (cell.homebase != null)
+            {
+                var homebase = cell.homebase.GetComponent<HomebaseAuthoring>();
+                switch (homebase.Player)
+                {
+                    case Players.Player2:
+                        bufferValue |= LbPlayer.kPlayer2Flag;
+                        break;
+
+                    case Players.Player3:
+                        bufferValue |= LbPlayer.kPlayer3Flag;
+                        break;
+
+                    case Players.Player4:
+                        bufferValue |= LbPlayer.kPlayer4Flag;
+                        break;
+                }
+
+                bufferValue |= kHomebaseFlag;
+            }
 
             dirMapbuffer.Add(bufferValue);
         }

@@ -265,19 +265,19 @@ public class BoardBuilderWindow : EditorWindow
         var placeX = m_SizeX * offset;
         var placeY = m_SizeY * offset;
 
-        PlaceHomebase(Players.Player1, placeX, placeY, boardTransform);
-        PlaceHomebase(Players.Player2, placeX * 2f, placeY, boardTransform);
-        PlaceHomebase(Players.Player3, placeX * 2f, placeY * 2f, boardTransform);
-        PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform);
-
-        // Setup spawners
-        PlaceSpawner(0, 0, boardTransform, Quaternion.identity);
-        PlaceSpawner(m_SizeX - 1, 0, boardTransform, Quaternion.Euler(0, 0, 0));
-        PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.Euler(180, 0, 0));
-        PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0));
-
         // Setup holes
         var cellMap = board.GetCellMap();
+
+        PlaceHomebase(Players.Player1, placeX, placeY, boardTransform, cellMap);
+        PlaceHomebase(Players.Player2, placeX * 2f, placeY, boardTransform, cellMap);
+        PlaceHomebase(Players.Player3, placeX * 2f, placeY * 2f, boardTransform, cellMap);
+        PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform, cellMap);
+
+        // Setup spawners
+        PlaceSpawner(0, 0, boardTransform, Quaternion.identity, cellMap);
+        PlaceSpawner(m_SizeX - 1, 0, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
+        PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.identity, cellMap);
+        PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
 
         int numHoles = UnityEngine.Random.Range(0, 4);
         for (int i = 0; i < numHoles; ++i)
@@ -286,7 +286,11 @@ public class BoardBuilderWindow : EditorWindow
             if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
             {
                 var cell = cellMap[coord];
-                
+                if (cell.isHole || cell.hasSpawner || cell.homebase != null)
+                {
+                    continue;
+                }
+
                 var holeObject = new GameObject();
                 holeObject.name = "hole_" + coord;
                 holeObject.transform.SetParent(boardTransform);
@@ -310,7 +314,7 @@ public class BoardBuilderWindow : EditorWindow
     /// <summary>
     /// Place a spawner in the world
     /// </summary>
-    private void PlaceSpawner(int X, int Y, Transform parent, Quaternion quaternion)
+    private void PlaceSpawner(int X, int Y, Transform parent, Quaternion quaternion, Dictionary<Vector2Int, Cell> cellMap)
     {
         var location = new Vector2Int(X, Y);
 
@@ -324,12 +328,15 @@ public class BoardBuilderWindow : EditorWindow
 
         obj.transform.localPosition = center;
         obj.transform.SetParent(parent);
+
+        if (cellMap.ContainsKey(location))
+            cellMap[location].hasSpawner = true;
     }
 
     /// <summary>
     /// Place a homebase for the given player in the location
     /// </summary>
-    private void PlaceHomebase(Players player, float X, float Y, Transform parent)
+    private void PlaceHomebase(Players player, float X, float Y, Transform parent, Dictionary<Vector2Int, Cell> cellMap)
     {
         var location = new Vector2Int((int)X, (int)Y);
         var prefab = GetHomebasePrefab(player);
@@ -344,6 +351,9 @@ public class BoardBuilderWindow : EditorWindow
 
         obj.transform.localPosition = center;
         obj.transform.SetParent(parent);
+
+        if (cellMap.ContainsKey(location))
+            cellMap[location].homebase = obj;
     }
 
     /// <summary>

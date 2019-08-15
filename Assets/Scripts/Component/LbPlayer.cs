@@ -7,10 +7,10 @@ using System;
 [Serializable]
 public struct LbPlayer : IComponentData
 {
-    public const byte kPlayer1 = 0x00;
-    public const byte kPlayer2 = 0x01;
-    public const byte kPlayer3 = 0x10;
-    public const byte kPlayer4 = 0x11;
+    // public const short kPlayer1Flag = 0x000;
+    public const short kPlayer2Flag = 0x200;
+    public const short kPlayer3Flag = 0x400;
+    public const short kPlayer4Flag = 0x600;
 
     public byte Value;
 }
