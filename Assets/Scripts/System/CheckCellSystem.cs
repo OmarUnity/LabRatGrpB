@@ -31,12 +31,15 @@ public class CheckCellSystem : JobComponentSystem
         [ReadOnly] public ArchetypeChunkComponentType<LbSouthDirection> DirectionSouthType;
         [ReadOnly] public ArchetypeChunkComponentType<LbEastDirection> DirectionEastType;
         [ReadOnly] public ArchetypeChunkComponentType<LbWestDirection> DirectionWestType;
-                   
-        
+
+        [ReadOnly] public ArchetypeChunkComponentType<LbRat> RatType;
+
+
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
             var buffer = FlowMap[BoardEntity];
             var entities = chunk.GetNativeArray(EntityType);
+            var isRats = chunk.Has(RatType);
 
             var   byteShift = 0;
             var   componentType = 0;
@@ -81,7 +84,15 @@ public class CheckCellSystem : JobComponentSystem
                 }
                 else if ((cellMapValue & kHomebaseFlag) == kHomebaseFlag)
                 {
+                    CommandBuffer.AddComponent(chunkIndex, entity, new LbDestroy());
 
+                    var player = (cellMapValue >> 9) & 0x3;
+
+                    var scoreEntity = CommandBuffer.CreateEntity(chunkIndex);
+                    if (isRats)
+                        CommandBuffer.AddComponent(chunkIndex, scoreEntity, new LbRatScore() { Player = (byte)player });
+                    else
+                        CommandBuffer.AddComponent(chunkIndex, scoreEntity, new LbCatScore() { Player = (byte)player });
                 }
                 else
                 {
@@ -152,18 +163,20 @@ public class CheckCellSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var translationType = GetArchetypeChunkComponentType<Translation>();
         var lbBoardType = GetArchetypeChunkComponentType<LbBoard>();
         var array = m_Boardquery.ToEntityArray(Allocator.TempJob);
         var arrayLbBoard = m_Boardquery.ToComponentDataArray<LbBoard>(Allocator.TempJob);
         var boardEntity = array[0];
         var lbBoard = arrayLbBoard[0];
+
         var commandBuffer  =  m_Barrier.CreateCommandBuffer().ToConcurrent();
+        var translationType = GetArchetypeChunkComponentType<Translation>();
         var directionNorthType = GetArchetypeChunkComponentType<LbNorthDirection>();
         var directionSouthType = GetArchetypeChunkComponentType<LbSouthDirection>();
         var directionWestType = GetArchetypeChunkComponentType<LbWestDirection>();
         var directionEastType = GetArchetypeChunkComponentType<LbEastDirection>();
-        var entityType = GetArchetypeChunkEntityType(); 
+        var entityType = GetArchetypeChunkEntityType();
+        var ratType = GetArchetypeChunkComponentType<LbRat>();
         
         array.Dispose();
         arrayLbBoard.Dispose();
@@ -183,6 +196,7 @@ public class CheckCellSystem : JobComponentSystem
             DirectionSouthType = directionSouthType,
             DirectionWestType = directionWestType,
             DirectionEastType = directionEastType,
+            RatType = ratType,
             BoardSize = new int2(lbBoard.SizeX,lbBoard.SizeY)
             
         }.Schedule(m_Reachquery, inputDeps);
