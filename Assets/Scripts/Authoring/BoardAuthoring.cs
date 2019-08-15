@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 // ReSharper disable once InconsistentNaming
@@ -19,12 +17,12 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         0x5F,
         0x18,
         0x5A,
-         0x14,
-         0x55,
+        0x14,
+        0x55,
         0x2B,
         0xEB,
         0x0F,
-         0xFF,
+        0xFF,
         0x28,
         0xAA,
         0x00,
@@ -49,11 +47,6 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 
         foreach(var cell in cells)
         {
-            var hasNorthWall = HasWall(walls, cell, Directions.North);
-            var hasSouthWall = HasWall(walls, cell, Directions.South);
-            var hasWestWall = HasWall(walls, cell, Directions.West);
-            var hasEasrsWall = HasWall(walls, cell, Directions.East);
-
             var hasWallArray = new[]
             {
                 HasWall(walls, cell, Directions.North),
