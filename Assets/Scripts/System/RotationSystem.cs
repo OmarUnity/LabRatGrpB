@@ -15,6 +15,7 @@ public class RotationSystem : JobComponentSystem
         public void Execute(ref Rotation rotation, [ReadOnly] ref LbRotationSpeed rotationSpeed)
         {
             Debug.Log( "Rotate entity" );
+            rotation.Value = math.mul(math.normalize(rotation.Value), quaternion.AxisAngle(math.up(), rotationSpeed.Value * deltaTime));
         }
     }
 
