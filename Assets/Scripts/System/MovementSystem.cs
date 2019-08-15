@@ -8,9 +8,6 @@ using Unity.Collections.LowLevel.Unsafe;
 
 public class MovementSystem : JobComponentSystem
 {
-    EntityCommandBufferSystem   m_Barrier;
-
-    EntityQuery                 m_Group;
     EntityQuery                 m_Group_NorthMovement;
     EntityQuery                 m_Group_SouthMovement;
     EntityQuery                 m_Group_WestMovement;
@@ -18,9 +15,6 @@ public class MovementSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        // The command buffer is created
-        m_Barrier   = World.Active.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-
         // It's defined the query for the NORTH JOB
         var query_North = new EntityQueryDesc
         {
@@ -86,7 +80,6 @@ public class MovementSystem : JobComponentSystem
         {
             deltaTime           = deltaTime,
             direction           = new float3(0, 0, 1),
-            //commandBuffer       = m_Barrier.CreateCommandBuffer().ToConcurrent(),
 
             translationType     = GetArchetypeChunkComponentType<Translation>(),
             movementSpeedType   = GetArchetypeChunkComponentType<LbMovementSpeed>( true ),

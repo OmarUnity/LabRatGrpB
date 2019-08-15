@@ -8,8 +8,8 @@ using Unity.Entities;
 public class Movement_Authoring : MonoBehaviour, IConvertGameObjectToEntity
 {
     public enum MovementDirection { Up, Down, Right, Left };
-    public MovementDirection direction;
-    public float speed = 1.0f;
+    public MovementDirection    direction;
+    public float                speed = 1.0f;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
@@ -22,7 +22,7 @@ public class Movement_Authoring : MonoBehaviour, IConvertGameObjectToEntity
         if (direction == MovementDirection.Left)
             dstManager.AddComponentData( entity, new LbWestDirection() );
 
-        dstManager.AddComponentData( entity, new LbMovementSpeed { Value = speed } );
-        dstManager.AddComponentData( entity, new LbDistanceToTarget() { Value = 1 } );
+        dstManager.AddComponentData(entity, new LbMovementSpeed { Value = speed });
+        dstManager.AddComponentData(entity, new LbDistanceToTarget() { Value = 1 });
     }
 }
