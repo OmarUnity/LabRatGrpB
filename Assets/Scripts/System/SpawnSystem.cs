@@ -7,6 +7,12 @@ using Random = Unity.Mathematics.Random;
 
 public class SpawnSystem : JobComponentSystem
 {
+
+    enum InstanceType
+    {
+        Cat, Mouse
+    }
+    
     private BeginInitializationEntityCommandBufferSystem _commandBufferSystem;
     private Random _random = new Random(1);
     
@@ -29,18 +35,17 @@ public class SpawnSystem : JobComponentSystem
             if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
             {
                 lbSpawner.ElapsedTimeForMice = 0;
-                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.MousePrefab, 2.0f);
-                
+                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.MousePrefab, 2.0f, InstanceType.Mouse);
             }
             
             if (lbSpawner.ElapsedTimeForCats > lbSpawner.CatFrequency)
             {
                 lbSpawner.ElapsedTimeForCats = 0;
-                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.CatPrefab, 1.0f);
+                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.CatPrefab, 1.0f, InstanceType.Cat);
             }
         }
 
-        private void DoSpawn(int index, ref Translation translation, ref Rotation rotation, ref Entity entityType, float speed)
+        private void DoSpawn(int index, ref Translation translation, ref Rotation rotation, ref Entity entityType, float speed, InstanceType instanceType)
         {
             var instance = CommandBuffer.Instantiate(index, entityType);
             CommandBuffer.SetComponent(index, instance, new Translation{Value = translation.Value});
@@ -68,6 +73,15 @@ public class SpawnSystem : JobComponentSystem
                 
             CommandBuffer.SetComponent(index, instance, new LbMovementSpeed{ Value = speed});
             CommandBuffer.SetComponent(index, instance, new LbDistanceToTarget{ Value = 1});
+
+            if (instanceType == InstanceType.Cat)
+            {
+                CommandBuffer.AddComponent<LbCat>( index, instance);
+            }
+            else if (instanceType == InstanceType.Mouse)
+            {
+                CommandBuffer.AddComponent<LbRat>( index, instance);
+            }
         }
     }
     
