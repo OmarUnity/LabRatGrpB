@@ -226,6 +226,19 @@ public class BoardBuilderWindow : EditorWindow
             var location = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
             var direction = GetRandomDirection();
 
+            // Avoid wall outside the board
+            if (location.x == 0)
+            {
+                if (direction == Directions.West || direction == Directions.East)
+                    continue;
+            }
+
+            if (location.y == 0)
+            {
+                if (direction == Directions.North || direction == Directions.South)
+                    continue;
+            }
+
             if (BoardAuthoring.HasWall(wallMap, location, direction))
                 continue;
 
