@@ -127,6 +127,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2109092229445117983, guid: ee432d626de424aa9a07753f3971652c,
+        type: 3}
+      propertyPath: MouseFrequency
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 3558524365388033599, guid: ee432d626de424aa9a07753f3971652c,
         type: 3}
       propertyPath: m_Name

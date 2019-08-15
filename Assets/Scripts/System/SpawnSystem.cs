@@ -24,8 +24,6 @@ public class SpawnSystem : JobComponentSystem
         {
             lbSpawner.ElapsedTimeForMice += DeltaTime;
             lbSpawner.ElapsedTimeForCats += DeltaTime;
-             
-            Debug.Log(randomNumber);
             
             if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
             {
@@ -50,6 +48,12 @@ public class SpawnSystem : JobComponentSystem
                 {
                     CommandBuffer.AddComponent<LbWestDirection>(index, mouseInstance);
                 }
+                
+                CommandBuffer.AddComponent<LbMovementSpeed>( index, mouseInstance);
+                CommandBuffer.AddComponent<LbDistanceToTarget>( index, mouseInstance );
+                
+                CommandBuffer.SetComponent(index, mouseInstance, new LbMovementSpeed{ Value = 2});
+                CommandBuffer.SetComponent(index, mouseInstance, new LbDistanceToTarget{ Value = 1});
             }
             
             if (lbSpawner.ElapsedTimeForCats > lbSpawner.CatFrequency)
@@ -75,6 +79,12 @@ public class SpawnSystem : JobComponentSystem
                 {
                     CommandBuffer.AddComponent<LbWestDirection>(index, catInstance);
                 }
+                
+                CommandBuffer.AddComponent<LbMovementSpeed>( index, catInstance);
+                CommandBuffer.AddComponent<LbDistanceToTarget>( index, catInstance );
+                
+                CommandBuffer.SetComponent(index, catInstance, new LbMovementSpeed{ Value = 1});
+                CommandBuffer.SetComponent(index, catInstance, new LbDistanceToTarget{ Value = 1});
             }
         }
     }
