@@ -41,9 +41,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             SizeX = (byte)Size.x,
             SizeY = (byte)Size.y
         });
-        
-        var dirMapEntity = dstManager.CreateEntity(typeof(LbDirectionMap));
-        var dirMapbuffer = dstManager.GetBuffer<LbDirectionMap>(dirMapEntity);
+        var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
 
         var cells = GetComponentsInChildren<Cell>();
         var walls = GetWalls();
