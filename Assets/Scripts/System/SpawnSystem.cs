@@ -1,4 +1,5 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
 using UnityEngine;
@@ -28,64 +29,45 @@ public class SpawnSystem : JobComponentSystem
             if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
             {
                 lbSpawner.ElapsedTimeForMice = 0;
-                var mouseInstance = CommandBuffer.Instantiate(index, lbSpawner.MousePrefab);
-                CommandBuffer.SetComponent(index, mouseInstance, new Translation{Value = translation.Value});
-                CommandBuffer.SetComponent(index, mouseInstance, new Rotation{Value = rotation.Value});
-                CommandBuffer.AddComponent<LbReachCell>(index, mouseInstance);
-                if (randomNumber == 0)
-                {
-                    CommandBuffer.AddComponent<LbNorthDirection>(index, mouseInstance);
-                }
-                else if (randomNumber == 1)
-                {
-                    CommandBuffer.AddComponent<LbSouthDirection>(index, mouseInstance);
-                }
-                else if (randomNumber == 2)
-                {
-                    CommandBuffer.AddComponent<LbEastDirection>(index, mouseInstance);
-                }
-                else
-                {
-                    CommandBuffer.AddComponent<LbWestDirection>(index, mouseInstance);
-                }
+                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.MousePrefab, 2.0f);
                 
-                CommandBuffer.AddComponent<LbMovementSpeed>( index, mouseInstance);
-                CommandBuffer.AddComponent<LbDistanceToTarget>( index, mouseInstance );
-                
-                CommandBuffer.SetComponent(index, mouseInstance, new LbMovementSpeed{ Value = 2});
-                CommandBuffer.SetComponent(index, mouseInstance, new LbDistanceToTarget{ Value = 1});
             }
             
             if (lbSpawner.ElapsedTimeForCats > lbSpawner.CatFrequency)
             {
                 lbSpawner.ElapsedTimeForCats = 0;
-                var catInstance = CommandBuffer.Instantiate(index, lbSpawner.CatPrefab);
-                CommandBuffer.SetComponent(index, catInstance, new Translation{Value = translation.Value});
-                CommandBuffer.SetComponent(index, catInstance, new Rotation{Value = rotation.Value});
-                CommandBuffer.AddComponent<LbReachCell>(index, catInstance);
-                if (randomNumber == 0)
-                {
-                    CommandBuffer.AddComponent<LbNorthDirection>(index, catInstance);
-                }
-                else if (randomNumber == 1)
-                {
-                    CommandBuffer.AddComponent<LbSouthDirection>(index, catInstance);
-                }
-                else if (randomNumber == 2)
-                {
-                    CommandBuffer.AddComponent<LbEastDirection>(index, catInstance);
-                }
-                else
-                {
-                    CommandBuffer.AddComponent<LbWestDirection>(index, catInstance);
-                }
-                
-                CommandBuffer.AddComponent<LbMovementSpeed>( index, catInstance);
-                CommandBuffer.AddComponent<LbDistanceToTarget>( index, catInstance );
-                
-                CommandBuffer.SetComponent(index, catInstance, new LbMovementSpeed{ Value = 1});
-                CommandBuffer.SetComponent(index, catInstance, new LbDistanceToTarget{ Value = 1});
+                DoSpawn(index, ref translation, ref rotation, ref lbSpawner.CatPrefab, 1.0f);
             }
+        }
+
+        private void DoSpawn(int index, ref Translation translation, ref Rotation rotation, ref Entity entityType, float speed)
+        {
+            var instance = CommandBuffer.Instantiate(index, entityType);
+            CommandBuffer.SetComponent(index, instance, new Translation{Value = translation.Value});
+            CommandBuffer.SetComponent(index, instance, new Rotation{Value = rotation.Value});
+            CommandBuffer.AddComponent<LbReachCell>(index, instance);
+            if (randomNumber == 0)
+            {
+                CommandBuffer.AddComponent<LbNorthDirection>(index, instance);
+            }
+            else if (randomNumber == 1)
+            {
+                CommandBuffer.AddComponent<LbSouthDirection>(index, instance);
+            }
+            else if (randomNumber == 2)
+            {
+                CommandBuffer.AddComponent<LbEastDirection>(index, instance);
+            }
+            else
+            {
+                CommandBuffer.AddComponent<LbWestDirection>(index, instance);
+            }
+                
+            CommandBuffer.AddComponent<LbMovementSpeed>( index, instance);
+            CommandBuffer.AddComponent<LbDistanceToTarget>( index, instance );
+                
+            CommandBuffer.SetComponent(index, instance, new LbMovementSpeed{ Value = speed});
+            CommandBuffer.SetComponent(index, instance, new LbDistanceToTarget{ Value = 1});
         }
     }
     
@@ -95,7 +77,7 @@ public class SpawnSystem : JobComponentSystem
         {
             DeltaTime = Time.deltaTime,
             CommandBuffer = _commandBufferSystem.CreateCommandBuffer().ToConcurrent(),
-            randomNumber = _random.NextInt(0, 3)
+            randomNumber = _random.NextInt(0, 4)
         }.Schedule(this, inputDeps);
         
         _commandBufferSystem.AddJobHandleForProducer(jobHandle);
