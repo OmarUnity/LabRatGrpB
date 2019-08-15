@@ -43,12 +43,16 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         });
         var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
 
-        var cells = GetComponentsInChildren<Cell>();
+        var cells = GetCellMap();
         var walls = GetWalls();
 
-        foreach(var cell in cells)
+        for (int y = 0; y < Size.y; ++y)
+            for (int x=0; x<Size.x; ++x)
         {
-            var cellLocation = cell.location;
+
+                var cellLocation = new Vector2Int(x, y);
+                var cell = cells[cellLocation];
+
             var hasWallArray = new[]
             {
                 HasWall(walls, cellLocation, Directions.North),
@@ -90,6 +94,8 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             }
 
             dirMapbuffer.Add(bufferValue);
+
+            Debug.Log(cellLocation + " buffer: " + bufferValue.ToString("X4"));
         }
     }
 
