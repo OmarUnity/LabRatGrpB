@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 3
-  rotationSpeed: 1
+  rotationSpeed: 1.5
 --- !u!1 &35740939
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,7 +436,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 1
-  rotationSpeed: 1
+  rotationSpeed: 1.5
 --- !u!1001 &910846554
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -536,7 +536,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 2
-  rotationSpeed: 1
+  rotationSpeed: 1.5
 --- !u!1001 &1174970176
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -613,7 +613,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 1
-  rotationSpeed: 1
+  rotationSpeed: 1.5
 --- !u!114 &1174970179
 MonoBehaviour:
   m_ObjectHideFlags: 0
