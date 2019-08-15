@@ -94,9 +94,9 @@ public class MovementSystem : JobComponentSystem
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
             // Get information of a certain chunk
-            var chunkTranslations = chunk.GetNativeArray(translationType);
-            var chunkMovementSpeed = chunk.GetNativeArray(movementSpeedType);
-            var chunkDistanceToTarget = chunk.GetNativeArray(distanceToTargetType);
+            var chunkTranslations       = chunk.GetNativeArray(translationType);
+            var chunkMovementSpeed      = chunk.GetNativeArray(movementSpeedType);
+            var chunkDistanceToTarget   = chunk.GetNativeArray(distanceToTargetType);
             //var chunkEntity             = chunk.GetNativeArray( entityType );
 
             for (var i = 0; i < chunk.Count; i++)
