@@ -7,34 +7,17 @@ public struct LbSpawner : IComponentData
 {
     
     /// <summary>
-    /// Prefab entity to instantiate mice entities
+    /// Prefab entity to instantiate
     /// </summary>
-    public Entity MousePrefab;
-
-    /// <summary>
-    /// How often an mouse instance is made
-    /// </summary>
-    public float MouseFrequency;
+    public Entity Prefab;
     
     /// <summary>
-    /// Prefab entity to instantiate mice entities
+    /// Maximum number of instances to create
     /// </summary>
-    public Entity CatPrefab;
-
-    /// <summary>
-    /// How often an mouse instance is made
-    /// </summary>
-    public float CatFrequency;
+    public int MaxAmount;
     
     /// <summary>
-    /// The elapsed time after instantiating a Mouse
+    /// How often an instance is made
     /// </summary>
-    public float ElapsedTimeForMice;
-    
-    /// <summary>
-    /// The elapsed time after instantiating a Mouse
-    /// </summary>
-    public float ElapsedTimeForCats;
-    
-
+    public float Frequency;
 }

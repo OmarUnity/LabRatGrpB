@@ -1,32 +1,27 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
-using UnityEngine.Serialization;
 
 [RequiresEntityConversion]
 public class Spawner_Authoring : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGameObjectToEntity
 {
-    public GameObject MousePrefab;
-    public float MouseFrequency;
-    
-    public GameObject CatPrefab;
-    public float CatFrequency;
+    public GameObject prefab;
+    public int maxAmount;
+    public int frecuency;
+
 
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
     {
-        referencedPrefabs.Add(MousePrefab);
-        referencedPrefabs.Add(CatPrefab);
+        referencedPrefabs.Add(prefab);
     }
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         var spawnerData = new LbSpawner
         {
-            MousePrefab = conversionSystem.GetPrimaryEntity(MousePrefab),
-            MouseFrequency = MouseFrequency,
-            
-            CatPrefab = conversionSystem.GetPrimaryEntity(CatPrefab),
-            CatFrequency = CatFrequency
+            Prefab = conversionSystem.GetPrimaryEntity(prefab),
+            MaxAmount = maxAmount,
+            Frequency = frecuency
         };
         dstManager.AddComponentData(entity, spawnerData);
     }

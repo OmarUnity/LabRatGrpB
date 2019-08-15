@@ -226,19 +226,6 @@ public class BoardBuilderWindow : EditorWindow
             var location = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
             var direction = GetRandomDirection();
 
-            // Avoid wall outside the board
-            if (location.x == 0)
-            {
-                if (direction == Directions.West || direction == Directions.East)
-                    continue;
-            }
-
-            if (location.y == 0)
-            {
-                if (direction == Directions.North || direction == Directions.South)
-                    continue;
-            }
-
             if (BoardAuthoring.HasWall(wallMap, location, direction))
                 continue;
 
@@ -286,7 +273,7 @@ public class BoardBuilderWindow : EditorWindow
             if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
             {
                 var cell = cellMap[coord];
-                
+
                 var holeObject = new GameObject();
                 holeObject.name = "hole_" + coord;
                 holeObject.transform.SetParent(boardTransform);
@@ -298,7 +285,7 @@ public class BoardBuilderWindow : EditorWindow
 
                 DestroyImmediate(cell.gameObject);
             }
-                
+
         }
 
         UnityEngine.Random.state = oldState;
@@ -338,7 +325,7 @@ public class BoardBuilderWindow : EditorWindow
         obj.name = "homebase_" + player;
 
         var center = new Vector3(
-            location.x,             
+            location.x,
             0.0f,                   // Change when we have a height variable
             location.y);
 
@@ -351,7 +338,7 @@ public class BoardBuilderWindow : EditorWindow
     /// </summary>
     private GameObject GetHomebasePrefab(Players player)
     {
-        switch(player)
+        switch (player)
         {
             case Players.Player1:
                 return m_Homebase1;
@@ -434,7 +421,7 @@ public class BoardBuilderWindow : EditorWindow
 
         var halfBoardWidth = 0.5f;
         var halfWallWidth = 0.025f;
-        
+
 
         var center = new Vector3(
             coord.x,
@@ -442,7 +429,7 @@ public class BoardBuilderWindow : EditorWindow
             coord.y);
 
         Vector3 offset = Vector3.zero;
-        switch(direction)
+        switch (direction)
         {
             case Directions.North:
                 offset = new Vector3(0.0f, 0.0f, -1.0f * (halfBoardWidth + halfWallWidth));
@@ -453,7 +440,7 @@ public class BoardBuilderWindow : EditorWindow
                 break;
 
             case Directions.West:
-                offset = new Vector3(halfWallWidth- halfBoardWidth, 0.0f, 0.0f);
+                offset = new Vector3(halfWallWidth - halfBoardWidth, 0.0f, 0.0f);
                 break;
 
             case Directions.South:
@@ -555,7 +542,7 @@ public class BoardBuilderWindow : EditorWindow
             number = PlayerPrefs.GetInt(key);
         }
     }
-    
+
     /// <summary>
     /// Helper to change an object field and serialize it to disk
     /// </summary>
@@ -594,5 +581,5 @@ public class BoardBuilderWindow : EditorWindow
             go = AssetDatabase.LoadAssetAtPath(path, typeof(GameObject)) as GameObject;
         }
     }
-#endregion
+    #endregion
 }
