@@ -78,6 +78,51 @@ public class MovementSystem : JobComponentSystem
         m_Group_EastMovement = GetEntityQuery(query_East);
     }
 
+    [BurstCompile]
+    public struct Move_Job : IJobChunk
+    {
+        public float deltaTime;
+        public float3 direction;
+
+        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation> translationType;
+        [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed> movementSpeedType;
+        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget> distanceToTargetType;
+
+        // If you need to reach some Entity from an IJobChunk, 
+        //[ReadOnly] public ArchetypeChunkComponentType<Entity> entityType;
+
+        public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
+        {
+            // Get information of a certain chunk
+            var chunkTranslations = chunk.GetNativeArray(translationType);
+            var chunkMovementSpeed = chunk.GetNativeArray(movementSpeedType);
+            var chunkDistanceToTarget = chunk.GetNativeArray(distanceToTargetType);
+            //var chunkEntity             = chunk.GetNativeArray( entityType );
+
+            for (var i = 0; i < chunk.Count; i++)
+            {
+                var translation                 = chunkTranslations[i];
+                var movementSpeed               = chunkMovementSpeed[i];
+                var distanceToTarget            = chunkDistanceToTarget[i];
+
+                translation.Value               += direction * movementSpeed.Value * deltaTime;
+                distanceToTarget.Value          -= movementSpeed.Value * deltaTime;
+
+                chunkDistanceToTarget[i]        = distanceToTarget;
+                chunkTranslations[i]            = translation;
+
+                if (distanceToTarget.Value <= 0)
+                {
+                    translation.Value           = math.round(translation.Value);
+                    chunkTranslations[i]        = translation;
+
+                    distanceToTarget.Value      = 0;
+                    chunkDistanceToTarget[i]    = distanceToTarget;
+                }
+            }
+        }
+    }
+
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         float deltaTime = Mathf.Clamp(Time.deltaTime, 0.0f, 0.3f);
@@ -127,50 +172,5 @@ public class MovementSystem : JobComponentSystem
         m_Barrier.AddJobHandleForProducer(finalHandle);
 
         return finalHandle;
-    }
-}
-
-[BurstCompile]
-public struct Move_Job : IJobChunk
-{
-    public float deltaTime;
-    public float3 direction;
-
-    [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation> translationType;
-    [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed> movementSpeedType;
-    [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget> distanceToTargetType;
-
-    // If you need to reach some Entity from an IJobChunk, 
-    //[ReadOnly] public ArchetypeChunkComponentType<Entity> entityType;
-
-    public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
-    {
-        // Get information of a certain chunk
-        var chunkTranslations = chunk.GetNativeArray(translationType);
-        var chunkMovementSpeed = chunk.GetNativeArray(movementSpeedType);
-        var chunkDistanceToTarget = chunk.GetNativeArray(distanceToTargetType);
-        //var chunkEntity             = chunk.GetNativeArray( entityType );
-
-        for (var i = 0; i < chunk.Count; i++)
-        {
-            var translation = chunkTranslations[i];
-            var movementSpeed = chunkMovementSpeed[i];
-            var distanceToTarget = chunkDistanceToTarget[i];
-
-            translation.Value += direction * movementSpeed.Value * deltaTime;
-            distanceToTarget.Value -= movementSpeed.Value * deltaTime;
-
-            chunkDistanceToTarget[i] = distanceToTarget;
-            chunkTranslations[i] = translation;
-
-            if (distanceToTarget.Value <= 0)
-            {
-                translation.Value = math.round(translation.Value);
-                chunkTranslations[i] = translation;
-
-                distanceToTarget.Value = 0;
-                chunkDistanceToTarget[i] = distanceToTarget;
-            }
-        }
     }
 }

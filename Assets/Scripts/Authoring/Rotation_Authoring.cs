@@ -3,20 +3,20 @@ using Unity.Entities;
 
 public class Rotation_Authoring : MonoBehaviour, IConvertGameObjectToEntity
 {
-    public enum MovementDirection { Up, Down, Right, Left };
-    public MovementDirection    direction = MovementDirection.Up;
+    public enum MovementDirection { North, South, West, East };
+    public MovementDirection    direction = MovementDirection.North;
     public float                rotationSpeed = 1.0f;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        if ( direction == MovementDirection.Up )
+        if ( direction == MovementDirection.North)
             dstManager.AddComponentData(entity, new LbNorthDirection());
-        if ( direction == MovementDirection.Down )
+        if ( direction == MovementDirection.South)
             dstManager.AddComponentData(entity, new LbSouthDirection());
-        if ( direction == MovementDirection.Right )
-            dstManager.AddComponentData(entity, new LbEastDirection());
-        if ( direction == MovementDirection.Left )
+        if ( direction == MovementDirection.West)
             dstManager.AddComponentData(entity, new LbWestDirection());
+        if (direction == MovementDirection.East)
+            dstManager.AddComponentData(entity, new LbEastDirection());
 
         dstManager.AddComponentData(entity, new LbRotationSpeed { Value = rotationSpeed } );
     }
