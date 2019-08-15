@@ -15,19 +15,22 @@ public class CheckCellSystem : JobComponentSystem
         [ReadOnly] public ArchetypeChunkComponentType<Translation> TranslationType;
         [ReadOnly] public BufferFromEntity<LbDirectionMap> FlowMap;
         [ReadOnly] public int2 BoardSize;
-                   public EntityCommandBuffer.Concurrent CommandBuffer;
         
         
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
             var buffer = FlowMap[BoardEntity];
+            
             var chunkTranslation = chunk.GetNativeArray(TranslationType);
+            
             
             for (var i = 0; i < chunk.Count; i++)
             {
                 var translation = chunkTranslation[i].Value;
-                int index = ((int) translation.z) * BoardSize.y + (int) translation.x;
+                int index = (int) translation.x * BoardSize.x + (int) translation.y;
+                Debug.Log(buffer[index].Value);
             }
+             
         }
     }
 
@@ -35,6 +38,8 @@ public class CheckCellSystem : JobComponentSystem
     {
         m_Reachquery = GetEntityQuery(ComponentType.ReadOnly<LbReachCell>(),ComponentType.ReadOnly<Translation>());
         m_Boardquery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>());
+        
+
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
