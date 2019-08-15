@@ -28,6 +28,8 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         0x00,
     };
 
+    private const short kHoleFlag = 0x100;
+
     // The MonoBehaviour data is converted to ComponentData on the entity.
     // We are specifically transforming from a good editor representation of the data (Represented in degrees)
     // To a good runtime representation (Represented in radians)
@@ -42,17 +44,18 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
        
         var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
 
-        var cells = GetCells();
+        var cells = GetComponentsInChildren<Cell>();
         var walls = GetWalls();
 
         foreach(var cell in cells)
         {
+            var cellLocation = cell.location;
             var hasWallArray = new[]
             {
-                HasWall(walls, cell, Directions.North),
-                HasWall(walls, cell, Directions.South),
-                HasWall(walls, cell, Directions.West),
-                HasWall(walls, cell, Directions.East)
+                HasWall(walls, cellLocation, Directions.North),
+                HasWall(walls, cellLocation, Directions.South),
+                HasWall(walls, cellLocation, Directions.West),
+                HasWall(walls, cellLocation, Directions.East)
             };
 
             var bitArrayWalls = new BitArray(hasWallArray);
@@ -60,7 +63,16 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             var bytesWalls = new byte[1];
             bitArrayWalls.CopyTo(bytesWalls, 0);
 
-            dirMapbuffer.Add(m_DirList[bytesWalls[0]]);
+            short bufferValue = 0;
+            bufferValue |= (short)m_DirList[bytesWalls[0]];
+
+            if (cell.isHole)
+            {
+                bufferValue |= kHoleFlag;
+            }
+
+
+            dirMapbuffer.Add(bufferValue);
         }
     }
 
@@ -75,19 +87,19 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     }
 
     /// <summary>
-    /// Get the list of all cell locations
+    /// Get the map of cells
     /// </summary>
     /// <returns></returns>
-    private List<Vector2Int> GetCells()
-	{
-		List<Vector2Int> cells = new List<Vector2Int>();
+    public Dictionary<Vector2Int, Cell> GetCellMap()
+    {
+        var map = new Dictionary<Vector2Int, Cell>();
 
         var cellObjs = GetComponentsInChildren<Cell>();
         foreach (var cell in cellObjs)
-            cells.Add(cell.location);
+            map.Add(cell.location, cell);
 
-		return cells;
-	}
+        return map;
+    }
 
     /// <summary>
     /// Get the walls map
