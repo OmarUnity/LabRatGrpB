@@ -9,6 +9,9 @@ using Debug = UnityEngine.Debug;
 
 public class CheckCellSystem : JobComponentSystem
 {
+    private const short kHoleFlag = 0x100;
+    private const short kHomebaseFlag = 0x800;
+
     private EntityQuery m_Reachquery;
     private EntityQuery m_Boardquery;
 
@@ -67,52 +70,76 @@ public class CheckCellSystem : JobComponentSystem
                 var entity = entities[i];
                 var translation = chunkTranslation[i].Value;
                 var index = ((int) translation.z) * BoardSize.y + (int) translation.x;
-                var cellMapValue = buffer[index].Value & 0x00FF;
-                var nextDir =  (cellMapValue >> byteShift) & 0x3;
-                
-                CommandBuffer.RemoveComponent<LbReachCell>(chunkIndex,entity);
-                
-                switch (componentType)
+                var cellMapValue = buffer[index].Value;
+
+                if ((cellMapValue & kHoleFlag) == kHoleFlag)
                 {
-                    case 0:
-                        CommandBuffer.RemoveComponent<LbNorthDirection>(chunkIndex,entity);
-                        break;
-                    case 1:
-                        CommandBuffer.RemoveComponent<LbSouthDirection>(chunkIndex,entity);
-                        break;
-                    case 2:
-                        CommandBuffer.RemoveComponent<LbWestDirection>(chunkIndex,entity);
-                        break;
-                    case 3:
-                        CommandBuffer.RemoveComponent<LbEastDirection>(chunkIndex,entity);
-                        break;
+                    RemoveMovement(chunkIndex, entity, componentType);
+                    CommandBuffer.AddComponent(chunkIndex, entity, new LbFall());
+                    CommandBuffer.AddComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
+                    CommandBuffer.SetComponent(chunkIndex, entity, new LbMovementSpeed() { Value = -2.5f });
                 }
-                    
-                switch (nextDir)
+                else if ((cellMapValue & kHomebaseFlag) == kHomebaseFlag)
                 {
-                    //North
-                    case 0x0 :
-                        CommandBuffer.AddComponent<LbNorthDirection>(chunkIndex,entity);
-                        break;
-                    
-                    //South
-                    case 0x2 :
-                        CommandBuffer.AddComponent<LbSouthDirection>(chunkIndex,entity);
-                        break;
-                    
-                    //West
-                    case 0x3 :
-                        CommandBuffer.AddComponent<LbWestDirection>(chunkIndex,entity);
-                        break;
-                    
-                    //East
-                    case 0x1 :
-                        CommandBuffer.AddComponent<LbEastDirection>(chunkIndex,entity);
-                        break;
-                } 
+
+                }
+                else
+                {
+                    var nextDir = (cellMapValue >> byteShift) & 0x3;
+                    RemoveMovement(chunkIndex, entity, componentType);
+                    MoveToNextCell(chunkIndex, entity, nextDir);
+                }
+
+                CommandBuffer.RemoveComponent<LbReachCell>(chunkIndex, entity);
+            } 
+        }
+
+        private  void RemoveMovement(int chunkIndex, Entity entity, int componentType)
+        {
+            switch (componentType)
+            {
+                case 0:
+                    CommandBuffer.RemoveComponent<LbNorthDirection>(chunkIndex, entity);
+                    break;
+                case 1:
+                    CommandBuffer.RemoveComponent<LbSouthDirection>(chunkIndex, entity);
+                    break;
+                case 2:
+                    CommandBuffer.RemoveComponent<LbWestDirection>(chunkIndex, entity);
+                    break;
+                case 3:
+                    CommandBuffer.RemoveComponent<LbEastDirection>(chunkIndex, entity);
+                    break;
             }
-            
-            
+        }
+
+        /// <summary>
+        /// Move the entity to the next cell
+        /// </summary>
+        private void MoveToNextCell(int chunkIndex, Entity entity, int nextDir)
+        {
+            switch (nextDir)
+            {
+                //North
+                case 0x0:
+                    CommandBuffer.AddComponent<LbNorthDirection>(chunkIndex, entity);
+                    break;
+
+                //South
+                case 0x2:
+                    CommandBuffer.AddComponent<LbSouthDirection>(chunkIndex, entity);
+                    break;
+
+                //West
+                case 0x3:
+                    CommandBuffer.AddComponent<LbWestDirection>(chunkIndex, entity);
+                    break;
+
+                //East
+                case 0x1:
+                    CommandBuffer.AddComponent<LbEastDirection>(chunkIndex, entity);
+                    break;
+            }
         }
     }
 

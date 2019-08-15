@@ -94,8 +94,6 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             }
 
             dirMapbuffer.Add(bufferValue);
-
-            Debug.Log(cellLocation + " buffer: " + bufferValue.ToString("X4"));
         }
     }
 
