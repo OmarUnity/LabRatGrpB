@@ -47,3 +47,4 @@ Assembly-CSharp.csproj
 LabRatGrpB.sln
 *.csproj
 *.sln
+.idea/
