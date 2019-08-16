@@ -48,3 +48,5 @@ LabRatGrpB.sln
 *.csproj
 *.sln
 .idea/
+Assets/EntityCache.meta
+Assets/EntityCache/
