@@ -78,6 +78,7 @@ public class SpawnSystem : JobComponentSystem
             if (instanceType == InstanceType.Cat)
             {
                 CommandBuffer.AddComponent<LbCat>( index, instance);
+                CommandBuffer.AddComponent(index, instance, new LbLifetime(){ Value = 30.0f});
             }
             else if (instanceType == InstanceType.Mouse)
             {

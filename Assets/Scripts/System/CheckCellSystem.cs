@@ -66,21 +66,24 @@ public class CheckCellSystem : JobComponentSystem
                 componentType = 3;
             }
 
-            
             var chunkTranslation = chunk.GetNativeArray(TranslationType);
             
             for (var i = 0; i < chunk.Count; i++)
             {
                 var entity = entities[i];
                 var translation = chunkTranslation[i].Value;
+                
                 var index = ((int) translation.z) * BoardSize.y + (int) translation.x;
+                
                 var cellMapValue = buffer[index].Value;
-
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
                 {
                     RemoveMovement(chunkIndex, entity, componentType);
                     CommandBuffer.AddComponent(chunkIndex, entity, new LbFall());
-                    CommandBuffer.AddComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
+                    if (isRats)
+                        CommandBuffer.AddComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
+                    else
+                        CommandBuffer.SetComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
                     CommandBuffer.SetComponent(chunkIndex, entity, new LbMovementSpeed() { Value = -2.5f });
                 }
                 else if ((cellMapValue & kHomebaseFlag) == kHomebaseFlag)
