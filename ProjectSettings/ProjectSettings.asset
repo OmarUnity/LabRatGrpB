@@ -93,12 +93,12 @@ PlayerSettings:
   xboxEnableFitness: 0
   visibleInBackground: 1
   allowFullscreenSwitch: 1
-  graphicsJobMode: 0
+  graphicsJobMode: 1
   fullscreenMode: 1
   xboxSpeechDB: 0
   xboxEnableHeadOrientation: 0
   xboxEnableGuest: 0
-  xboxEnablePIXSampling: 0
+  xboxEnablePIXSampling: 1
   metalFramebufferOnly: 0
   xboxOneResolution: 0
   xboxOneSResolution: 0
@@ -547,7 +547,8 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    21: UNITY_XBOXONE_DEVELOPMENT_BUILD
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
@@ -604,7 +605,21 @@ PlayerSettings:
   XboxOneLanguage:
   - enus
   XboxOneCapability: []
-  XboxOneGameRating: {}
+  XboxOneGameRating:
+    CERO (Japan): 0
+    COB-AU (Australia): 0
+    CSRR (Taiwan): 0
+    DJCTQ (Brazil): 0
+    ESRB (US): 0
+    FPB (South Africa): 0
+    GRB (South Korea): 0
+    MDA (Singapore): 0
+    Microsoft: 0
+    OFLC-NZ (New Zealand): 0
+    PCBP (Russia): 0
+    PEGI (Europe): 0
+    PEGI (Portugal): 0
+    USK (Germany): 0
   XboxOneIsContentPackage: 0
   XboxOneEnableGPUVariability: 1
   XboxOneSockets: {}

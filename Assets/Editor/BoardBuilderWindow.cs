@@ -316,19 +316,18 @@ public class BoardBuilderWindow : EditorWindow
             PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
         }
 
-        if (m_AdditionalSpawners > 0)
+        int additionalSpawners = m_AdditionalSpawners;
+        while (additionalSpawners > 0)
         {
-            for (int i=0; i<m_AdditionalSpawners; ++i)
+            var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
+            if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
             {
-                var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
-                if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
-                {
-                    var cell = cellMap[coord];
-                    if (cell.hasSpawner || cell.homebase != null)
-                        continue;
+                var cell = cellMap[coord];
+                if (cell.hasSpawner || cell.homebase != null)
+                    continue;
 
-                    PlaceSpawner(coord.x, coord.y, boardTransform, Quaternion.identity, cellMap);
-                }
+                PlaceSpawner(coord.x, coord.y, boardTransform, Quaternion.identity, cellMap);
+                additionalSpawners--;
             }
         }
 
