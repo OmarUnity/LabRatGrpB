@@ -74,10 +74,6 @@ public class CheckCellSystem : JobComponentSystem
                 var entity = entities[i];
                 var translation = chunkTranslation[i].Value;
                 var index = ((int) translation.z) * BoardSize.y + (int) translation.x;
-                if (index >= buffer.Length)
-				{
-					continue;
-				}
                 var cellMapValue = buffer[index].Value;
 
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)

@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using Unity.Collections;
+using Unity.Entities;
+using Unity.Burst;
 using Unity.Jobs;
 using UnityEngine;
 
@@ -7,44 +9,64 @@ using UnityEngine;
 public class LifeTimeSystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
+    private NativeQueue<Entity> m_Queue;
 
     protected override void OnCreate()
     {
         m_Barrier = World.GetOrCreateSystem<LbSimulationBarrier>();
+        m_Queue = new NativeQueue<Entity>(Allocator.Persistent);
     }
 
-    // Use the [BurstCompile] attribute to compile a job with Burst.
-    //[BurstCompile]
+    protected override void OnDestroy()
+    {
+        m_Queue.Dispose();
+    }
+
+    [BurstCompile]
     struct LifeTimeJob : IJobForEachWithEntity<LbLifetime>
     {
         public float DeltaTime;
-
-        public EntityCommandBuffer.Concurrent CommandBuffer;
-
+        public NativeQueue<Entity>.ParallelWriter Queue;
+        
         public void Execute(Entity entity, int jobIndex, ref LbLifetime lifeTime)
         {
             lifeTime.Value -= DeltaTime;
-
             if (lifeTime.Value < 0.0f)
             {
-                CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
+                Queue.Enqueue(entity);
             }
+        }
+    }
+
+    struct LifeTimeCleanJob : IJob
+    {
+        public EntityCommandBuffer CommandBuffer;
+        public NativeQueue<Entity> Queue;
+
+        public void Execute()
+        {
+            while (Queue.Count > 0)
+                CommandBuffer.AddComponent(Queue.Dequeue(), new LbDestroy());
         }
     }
 
     // OnUpdate runs on the main thread.
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
-        var commandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent();
-
-        var job = new LifeTimeJob
+        var handle = new LifeTimeJob
         {
             DeltaTime = Time.deltaTime,
-            CommandBuffer = commandBuffer,
+            Queue = m_Queue.AsParallelWriter()
         }.Schedule(this, inputDependencies);
 
-        m_Barrier.AddJobHandleForProducer(job);
+        handle = new LifeTimeCleanJob()
+        {
+            Queue = m_Queue,
+            CommandBuffer =  m_Barrier.CreateCommandBuffer()
+        }.Schedule(handle);
+        
+        m_Barrier.AddJobHandleForProducer(handle);
 
-        return job;
+        return handle;
     }
 }
