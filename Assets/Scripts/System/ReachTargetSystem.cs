@@ -25,7 +25,7 @@ public class ReachTargetSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        m_Barrier = World.Active.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        m_Barrier = World.Active.GetOrCreateSystem<LbSimulationBarrier>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)

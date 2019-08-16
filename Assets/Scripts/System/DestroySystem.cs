@@ -2,16 +2,16 @@
 using Unity.Entities;
 using Unity.Jobs;
 
+
 // This system updates all entities in the scene with LbDestroy component.
-//[UpdateBefore(typeof(InitializationSystemGroup))]
-[UpdateInGroup(typeof(InitializationSystemGroup))]
+//[UpdateAfter(typeof(EndInitializationEntityCommandBufferSystem))]
 public class DestroySystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
 
     protected override void OnCreate()
     {
-        m_Barrier = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+        m_Barrier = World.GetOrCreateSystem<LbDestroyBarrier>();
     }
 
     // Use the [BurstCompile] attribute to compile a job with Burst.

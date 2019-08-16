@@ -13,12 +13,12 @@ public class SpawnSystem : JobComponentSystem
         Cat, Mouse
     }
     
-    private BeginInitializationEntityCommandBufferSystem _commandBufferSystem;
+    private EntityCommandBufferSystem _commandBufferSystem;
     private Random _random = new Random(1);
     
     protected override void OnCreate()
     {
-        _commandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        _commandBufferSystem = World.GetOrCreateSystem<LbSimulationBarrier>();
     }
 
     struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>

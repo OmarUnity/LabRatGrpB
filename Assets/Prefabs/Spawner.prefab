@@ -57,10 +57,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd2dfb66f5d174a79b93df749069270a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MousePrefab: {fileID: 1565721843962348, guid: fd9947d7db73f441cb1a4d06a4fc087d,
+  MousePrefab: {fileID: 5787429065175595128, guid: 1625b81a143ff437da2d489607383dad,
     type: 3}
-  MouseMaxAmount: 1000
   MouseFrequency: 0.2
-  CatPrefab: {fileID: 1377909340170110, guid: 19268829cf75c415f8f14765efcab529, type: 3}
-  CatMaxAmount: 3
+  CatPrefab: {fileID: 8337091143633409166, guid: b7c2af5736f8246999287ab04661ec92,
+    type: 3}
   CatFrequency: 7

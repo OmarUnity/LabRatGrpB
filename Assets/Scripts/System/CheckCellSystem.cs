@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Debug = UnityEngine.Debug;
 
+
 public class CheckCellSystem : JobComponentSystem
 {
     private const short kHoleFlag = 0x100;
@@ -73,6 +74,10 @@ public class CheckCellSystem : JobComponentSystem
                 var entity = entities[i];
                 var translation = chunkTranslation[i].Value;
                 var index = ((int) translation.z) * BoardSize.y + (int) translation.x;
+                if (index >= buffer.Length)
+				{
+					continue;
+				}
                 var cellMapValue = buffer[index].Value;
 
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
@@ -158,7 +163,7 @@ public class CheckCellSystem : JobComponentSystem
     {
         m_Reachquery = GetEntityQuery(ComponentType.ReadOnly<LbReachCell>(),ComponentType.ReadOnly<Translation>());
         m_Boardquery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>());
-        m_Barrier = World.GetOrCreateSystem<EntityCommandBufferSystem>();
+        m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)

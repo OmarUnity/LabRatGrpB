@@ -3,26 +3,40 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Unity.Burst;
 using UnityEngine;
 
+
+[UpdateBefore(typeof(DestroySystem))]
 public class CollisionSystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
     EntityQuery m_BoardQuery;
 
+    NativeQueue<Entity> m_Queue;
+
     protected override void OnCreate()
     {
-        m_Barrier = World.Active.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        m_Barrier = World.Active.GetOrCreateSystem<LbSimulationBarrier>();
         m_BoardQuery = GetEntityQuery(typeof(LbBoard), typeof(LbCatMap));
+
+        m_Queue = new NativeQueue<Entity>(Allocator.Persistent);
     }
 
+    protected override void OnDestroy()
+    {
+        m_Queue.Dispose();
+    }
+
+    [BurstCompile]
     struct CollisionJob : IJobForEachWithEntity<LbRat, Translation>
     {
         public const int kBitsInWord = sizeof(int) * 8;
 
         public int Size;
-        public EntityCommandBuffer.Concurrent CommandBuffer;
+        
         [ReadOnly] public NativeArray<LbCatMap> CatLocationBuffer;
+        public NativeQueue<Entity>.ParallelWriter Queue;
 
         public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbRat rat, [ReadOnly] ref Translation translation)
         {
@@ -37,7 +51,22 @@ public class CollisionSystem : JobComponentSystem
 
             if ((currentWord & bit) == bit)
             {
-                CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
+                Queue.Enqueue(entity);
+            }
+        }
+    }
+
+
+    struct CollisionCleanJob : IJob
+    {
+        public NativeQueue<Entity> Queue;
+        public EntityCommandBuffer CommandBuffer;
+
+        public void Execute()
+        {
+            for (int i = 0; i < Queue.Count; i++)
+            {
+                CommandBuffer.AddComponent(Queue.Dequeue(), new LbDestroy());
             }
         }
     }
@@ -48,15 +77,21 @@ public class CollisionSystem : JobComponentSystem
         var board = m_BoardQuery.GetSingleton<LbBoard>();
         var bufferLookup = GetBufferFromEntity<LbCatMap>();
 
-        var collisionJob = new CollisionJob
+        var handle = new CollisionJob
         {
             Size = board.SizeY,
             CatLocationBuffer = bufferLookup[boardEntity].AsNativeArray(),
-            CommandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent(),
+            Queue = m_Queue.AsParallelWriter(),
         }.Schedule(this, inputDeps);
 
-        m_Barrier.AddJobHandleForProducer( collisionJob );
+        handle = new CollisionCleanJob
+        {
+            Queue = m_Queue,
+            CommandBuffer = m_Barrier.CreateCommandBuffer(),
+        }.Schedule(handle);
 
-        return collisionJob;
+        m_Barrier.AddJobHandleForProducer(handle);
+
+        return handle;
     }
 }

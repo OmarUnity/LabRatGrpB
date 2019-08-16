@@ -19,7 +19,7 @@ public class MovementSystem : JobComponentSystem
     protected override void OnCreate()
     {
         // The command buffer is created
-        m_Barrier = World.Active.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        m_Barrier = World.GetOrCreateSystem<LbSimulationBarrier>();
 
         // It's defined the query for the NORTH JOB
         var query_North = new EntityQueryDesc

@@ -13,7 +13,7 @@ public class FallSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        m_Barrier = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        m_Barrier = World.GetOrCreateSystem<LbSimulationBarrier>();
     }
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
