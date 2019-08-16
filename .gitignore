@@ -49,4 +49,4 @@ LabRatGrpB.sln
 *.sln
 .idea/
 Assets/EntityCache.meta
-Assets/EntityCache/
+/Assets/EntityCache/
