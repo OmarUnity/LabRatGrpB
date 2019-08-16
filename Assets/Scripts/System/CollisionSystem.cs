@@ -23,27 +23,34 @@ public class CollisionSystem : JobComponentSystem
     {
         public float radius;
         [ReadOnly] public ArchetypeChunkComponentType<Translation>  translationType;
-        [DeallocateOnJobCompletion]
-        [ReadOnly] public NativeArray<Translation>                  entitiesToVerifyCollision;
+        [ReadOnly] public ArchetypeChunkEntityType                  entityCatType;
 
         public EntityCommandBuffer.Concurrent                       commandBuffer;
 
+        [DeallocateOnJobCompletion]
+        [ReadOnly] public NativeArray<Translation>                  entitiesToVerifyCollision;
+        [DeallocateOnJobCompletion]
+        [ReadOnly] public NativeArray<Entity>                       entityRats;
+
+        // chunkIndex == Job id
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
-            var chunkTranslations = chunk.GetNativeArray( translationType );
+            var chunkTranslations   = chunk.GetNativeArray( translationType );
+            var chunkEntities       = chunk.GetNativeArray( entityCatType );
 
             for (int i = 0; i < chunk.Count; i++)
             {
-                Translation catTranslation = chunkTranslations[ i ];
+                Translation catTranslation  = chunkTranslations[ i ];
+                //Entity catEntity            = chunkEntities[ i ];
 
                 for (int j = 0; j < entitiesToVerifyCollision.Length; j++)
                 {
-                    Translation ratTranslation = entitiesToVerifyCollision[i];
+                    Translation ratTranslation  = entitiesToVerifyCollision[i];
+                    Entity      ratEntity       = entityRats[i];
 
                     if ( IsColliding( catTranslation.Value, ratTranslation.Value, radius ) )
                     {
-                        //commandBuffer.AddComponent<LbDestroy>()
-                        //Debug.Log( "Should destroy the rat!" );
+                        commandBuffer.AddComponent<LbDestroy>(chunkIndex, ratEntity);
                     }
                 }
             }
@@ -63,9 +70,12 @@ public class CollisionSystem : JobComponentSystem
     {
         var collisionJob = new CollisionJob
         {
-            radius                      = 0.5f,
+            radius                      = 70.0f,
             translationType             = GetArchetypeChunkComponentType<Translation>(),
+            entityCatType               = GetArchetypeChunkEntityType(),
+
             entitiesToVerifyCollision   = ratsGroup.ToComponentDataArray<Translation>( Allocator.TempJob ),
+            entityRats                  = ratsGroup.ToEntityArray( Allocator.TempJob ),
 
             commandBuffer               = m_Barrier.CreateCommandBuffer().ToConcurrent()
         }.Schedule( catsGroup, inputDeps );

@@ -42,6 +42,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             SizeY = (byte)Size.y
         });
         var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
+        
 
         var cells = GetCellMap();
         var walls = GetWalls();
@@ -94,6 +95,16 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             }
 
             dirMapbuffer.Add(bufferValue);
+            
+        }
+
+        var catMapbuffer = dstManager.AddBuffer<LbCatMap>(entity);
+
+        var bitsInWord = sizeof(int) * 8;
+        var bufferCountInWords = (Size.x * Size.y + (bitsInWord - 1)) / bitsInWord;
+        for (int i = 0; i < bufferCountInWords; i++)
+        {
+            catMapbuffer.Add(new LbCatMap());
         }
     }
 
