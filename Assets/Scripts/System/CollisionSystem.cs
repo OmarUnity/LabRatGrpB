@@ -42,8 +42,7 @@ public class CollisionSystem : JobComponentSystem
 
                     if ( IsColliding( catTranslation.Value, ratTranslation.Value, radius ) )
                     {
-                        //commandBuffer.AddComponent<LbDestroy>()
-                        //Debug.Log( "Should destroy the rat!" );
+                        // commandBuffer.AddComponent(chunkIndex, ); =(
                     }
                 }
             }

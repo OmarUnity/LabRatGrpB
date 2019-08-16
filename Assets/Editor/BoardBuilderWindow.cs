@@ -279,7 +279,7 @@ public class BoardBuilderWindow : EditorWindow
         PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.identity, cellMap);
         PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
 
-        int numHoles = (int)(m_SizeX * m_SizeY * 0.05f);
+        int numHoles = (int)(m_SizeX * m_SizeY * 0.01f);
         for (int i = 0; i < numHoles; ++i)
         {
             var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));

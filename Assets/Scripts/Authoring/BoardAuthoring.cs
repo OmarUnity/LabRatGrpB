@@ -41,7 +41,10 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             SizeX = (byte)Size.x,
             SizeY = (byte)Size.y
         });
-        var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
+
+		var arrowMapBuffer = dstManager.AddBuffer<LbArrowMap>(entity);
+		var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
+		
 
         var cells = GetCellMap();
         var walls = GetWalls();
@@ -94,7 +97,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             }
 
             dirMapbuffer.Add(bufferValue);
-        }
+		}
     }
 
     #region BOARD_MAP_GENERATION

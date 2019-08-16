@@ -65,6 +65,7 @@ public class CheckCellSystem : JobComponentSystem
                 componentType = 3;
             }
 
+            // Make issue for chunk component removal in a CommandBuffer
             
             var chunkTranslation = chunk.GetNativeArray(TranslationType);
             
@@ -163,13 +164,18 @@ public class CheckCellSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var lbBoardType = GetArchetypeChunkComponentType<LbBoard>();
+        // Get the board entity
         var array = m_Boardquery.ToEntityArray(Allocator.TempJob);
-        var arrayLbBoard = m_Boardquery.ToComponentDataArray<LbBoard>(Allocator.TempJob);
-        var boardEntity = array[0];
-        var lbBoard = arrayLbBoard[0];
+		var boardEntity = array[0];
+		array.Dispose();
 
-        var commandBuffer  =  m_Barrier.CreateCommandBuffer().ToConcurrent();
+		// Get the board Component Data
+		var arrayLbBoard = m_Boardquery.ToComponentDataArray<LbBoard>(Allocator.TempJob);
+		var lbBoard = arrayLbBoard[0];
+		arrayLbBoard.Dispose();
+		
+
+		var commandBuffer  =  m_Barrier.CreateCommandBuffer().ToConcurrent();
         var translationType = GetArchetypeChunkComponentType<Translation>();
         var directionNorthType = GetArchetypeChunkComponentType<LbNorthDirection>();
         var directionSouthType = GetArchetypeChunkComponentType<LbSouthDirection>();
@@ -177,9 +183,6 @@ public class CheckCellSystem : JobComponentSystem
         var directionEastType = GetArchetypeChunkComponentType<LbEastDirection>();
         var entityType = GetArchetypeChunkEntityType();
         var ratType = GetArchetypeChunkComponentType<LbRat>();
-        
-        array.Dispose();
-        arrayLbBoard.Dispose();
         
         var lookup = GetBufferFromEntity<LbDirectionMap>();
 
