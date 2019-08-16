@@ -5,6 +5,8 @@ using UnityEditor;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Transforms;
+using Unity.Entities;
 
 public class BoardBuilderWindow : EditorWindow
 {
@@ -22,10 +24,18 @@ public class BoardBuilderWindow : EditorWindow
     private const string kHomebaseName3 = "Editor.HomeBase3";
     private const string kHomebaseName4 = "Editor.HomeBase4";
 
+    private const string kNoHoles = "Editor.NoHoles";
+    private const string kNoDefaultSpawners = "Editor.NoDefaultSpawners";
+    private const string kAdditionalSpawners = "Editor.AditionalSpawners";
+
     private int m_SizeX = 100;
     private int m_SizeY = 100;
     private float m_YNoise = 0.05f;
     private int m_RandomSeed = -1;
+
+    private bool m_NoHoles = false;
+    private bool m_NoDefaultSpawners = false;
+    private int m_AdditionalSpawners = 0;
 
     private GameObject m_CellPrefab = null;
     private GameObject m_WallPrefab = null;
@@ -75,6 +85,9 @@ public class BoardBuilderWindow : EditorWindow
         GUILayout.Label("RANDOM");
 
         IntField(kRandomSeedName, "Random Seed:", ref m_RandomSeed);
+        BoolField(kNoDefaultSpawners, "No Default Spawners:", ref m_NoDefaultSpawners);
+        IntField(kAdditionalSpawners, "Additional Spawners:", ref m_AdditionalSpawners);
+        BoolField(kNoHoles, "No Holes:", ref m_NoHoles);
 
         GUILayout.Space(5.0f);
         GUILayout.Label("PREFABS");
@@ -122,7 +135,11 @@ public class BoardBuilderWindow : EditorWindow
         LoadInt(kSizeXName, ref m_SizeX);
         LoadInt(kSizeYName, ref m_SizeY);
         LoadFloat(kYNoiseName, ref m_YNoise);
+
         LoadInt(kRandomSeedName, ref m_RandomSeed);
+        LoadBool(kNoDefaultSpawners, ref m_NoDefaultSpawners);
+        LoadInt(kAdditionalSpawners, ref m_AdditionalSpawners);
+        LoadBool(kNoHoles, ref m_NoHoles);
 
         LoadObject(kCellName, ref m_CellPrefab);
         LoadObject(kWallName, ref m_WallPrefab);
@@ -173,8 +190,25 @@ public class BoardBuilderWindow : EditorWindow
         board.Size = new Vector2Int(m_SizeX, m_SizeY);
 
         // Clean up all childrens
-        var boardTransform = board.transform;
-        EditorUtil.DestroyChildren(boardTransform);
+        Transform boardTransform = null; //board.transform;
+        if (boardTransform != null)
+        {
+            EditorUtil.DestroyChildren(boardTransform);
+        }
+        else
+        {
+            foreach (var cell in FindObjectsOfType<Cell>())
+                DestroyImmediate(cell.gameObject);
+
+            foreach (var cell in FindObjectsOfType<Wall>())
+                DestroyImmediate(cell.gameObject);
+
+            foreach (var cell in FindObjectsOfType<HomebaseAuthoring>())
+                DestroyImmediate(cell.gameObject);
+
+            foreach (var cell in FindObjectsOfType<Spawner_Authoring>())
+                DestroyImmediate(cell.gameObject);
+        }
 
         // Generate the board floor and external walls
         for (int z = 0; z < m_SizeY; ++z)
@@ -274,36 +308,57 @@ public class BoardBuilderWindow : EditorWindow
         PlaceHomebase(Players.Player4, placeX, placeY * 2f, boardTransform, cellMap);
 
         // Setup spawners
-        PlaceSpawner(0, 0, boardTransform, Quaternion.identity, cellMap);
-        PlaceSpawner(m_SizeX - 1, 0, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
-        PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.identity, cellMap);
-        PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
-
-        int numHoles = (int)(m_SizeX * m_SizeY * 0.05f);
-        for (int i = 0; i < numHoles; ++i)
+        if (!m_NoDefaultSpawners)
         {
-            var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
-            if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
+            PlaceSpawner(0, 0, boardTransform, Quaternion.identity, cellMap);
+            PlaceSpawner(m_SizeX - 1, 0, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
+            PlaceSpawner(m_SizeX - 1, m_SizeY - 1, boardTransform, Quaternion.identity, cellMap);
+            PlaceSpawner(0, m_SizeY - 1, boardTransform, Quaternion.Euler(0, 0, 0), cellMap);
+        }
+
+        if (m_AdditionalSpawners > 0)
+        {
+            for (int i=0; i<m_AdditionalSpawners; ++i)
             {
-                var cell = cellMap[coord];
-                if (cell.isHole || cell.hasSpawner || cell.homebase != null)
+                var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
+                if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
                 {
-                    continue;
+                    var cell = cellMap[coord];
+                    if (cell.hasSpawner || cell.homebase != null)
+                        continue;
+
+                    PlaceSpawner(coord.x, coord.y, boardTransform, Quaternion.identity, cellMap);
                 }
-
-                var holeObject = new GameObject();
-                holeObject.name = "hole_" + coord;
-                holeObject.transform.SetParent(boardTransform);
-                holeObject.transform.localPosition = cell.transform.localPosition;
-
-                var holeCell = holeObject.AddComponent<Cell>();
-                holeCell.location = coord;
-                holeCell.isHole = true;
-
-                cellMap[coord] = holeCell;
-                DestroyImmediate(cell.gameObject);
             }
-                
+        }
+
+        if (!m_NoHoles)
+        {
+            int numHoles = (int)(m_SizeX * m_SizeY * 0.05f);
+            for (int i = 0; i < numHoles; ++i)
+            {
+                var coord = new Vector2Int(UnityEngine.Random.Range(0, m_SizeX), UnityEngine.Random.Range(0, m_SizeY));
+                if (coord.x > 0 && coord.y > 0 && coord.x < m_SizeX - 1 && coord.y < m_SizeY - 1 && cellMap.ContainsKey(coord))
+                {
+                    var cell = cellMap[coord];
+                    if (cell.isHole || cell.hasSpawner || cell.homebase != null)
+                    {
+                        continue;
+                    }
+
+                    var holeObject = new GameObject();
+                    holeObject.name = "hole_" + coord;
+                    holeObject.transform.SetParent(boardTransform);
+                    holeObject.transform.localPosition = cell.transform.localPosition;
+
+                    var holeCell = holeObject.AddComponent<Cell>();
+                    holeCell.location = coord;
+                    holeCell.isHole = true;
+
+                    cellMap[coord] = holeCell;
+                    DestroyImmediate(cell.gameObject);
+                }
+            }
         }
 
         UnityEngine.Random.state = oldState;
@@ -421,6 +476,11 @@ public class BoardBuilderWindow : EditorWindow
         if (board == null)
         {
             board = obj.AddComponent<BoardAuthoring>();
+        }
+
+        if (obj.GetComponent<ConvertToEntity>() == null)
+        {
+            obj.AddComponent<ConvertToEntity>();
         }
 
         return board;
@@ -542,6 +602,27 @@ public class BoardBuilderWindow : EditorWindow
         }
     }
 
+    /// <summary>
+    /// Helper to change a bool field and serialize it to disk
+    /// </summary>
+    private void BoolField(string key, string label, ref bool value)
+    {
+        var b = EditorGUILayout.Toggle(label, value);
+        if (b != value)
+        {
+            PlayerPrefs.SetInt(key, b ? 1 : 0);
+            value = b;
+        }
+    }
+
+    /// <summary>
+    /// Load a flag
+    /// </summary>
+    private void LoadBool(string key, ref bool value)
+    {
+        if (PlayerPrefs.HasKey(key))
+            value = PlayerPrefs.GetInt(key) == 1;
+    }
 
     /// <summary>
     /// Help to change a float field and serialize it to disk

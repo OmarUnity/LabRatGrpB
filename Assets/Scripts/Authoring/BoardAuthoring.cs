@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections;
 using Unity.Entities;
+using Unity.Transforms;
 using UnityEngine;
 
 // ReSharper disable once InconsistentNaming
@@ -41,61 +42,62 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
             SizeX = (byte)Size.x,
             SizeY = (byte)Size.y
         });
+        dstManager.AddComponentData(entity, new Static());
+
         var dirMapbuffer = dstManager.AddBuffer<LbDirectionMap>(entity);
-        
 
         var cells = GetCellMap();
         var walls = GetWalls();
 
         for (int y = 0; y < Size.y; ++y)
-            for (int x=0; x<Size.x; ++x)
-        {
-
+        { 
+            for (int x = 0; x < Size.x; ++x)
+            {
                 var cellLocation = new Vector2Int(x, y);
                 var cell = cells[cellLocation];
 
-            var hasWallArray = new[]
-            {
-                HasWall(walls, cellLocation, Directions.North),
-                HasWall(walls, cellLocation, Directions.South),
-                HasWall(walls, cellLocation, Directions.West),
-                HasWall(walls, cellLocation, Directions.East)
-            };
-
-            var bitArrayWalls = new BitArray(hasWallArray);
-
-            var bytesWalls = new byte[1];
-            bitArrayWalls.CopyTo(bytesWalls, 0);
-
-            short bufferValue = (short)m_DirList[bytesWalls[0]];
-            if (cell.isHole)
-            {
-                bufferValue |= kHoleFlag;
-            }
-
-            if (cell.homebase != null)
-            {
-                var homebase = cell.homebase.GetComponent<HomebaseAuthoring>();
-                switch (homebase.Player)
+                var hasWallArray = new[]
                 {
-                    case Players.Player2:
-                        bufferValue |= LbPlayer.kPlayer2Flag;
-                        break;
+                    HasWall(walls, cellLocation, Directions.North),
+                    HasWall(walls, cellLocation, Directions.South),
+                    HasWall(walls, cellLocation, Directions.West),
+                    HasWall(walls, cellLocation, Directions.East)
+                };
 
-                    case Players.Player3:
-                        bufferValue |= LbPlayer.kPlayer3Flag;
-                        break;
+                var bitArrayWalls = new BitArray(hasWallArray);
 
-                    case Players.Player4:
-                        bufferValue |= LbPlayer.kPlayer4Flag;
-                        break;
+                var bytesWalls = new byte[1];
+                bitArrayWalls.CopyTo(bytesWalls, 0);
+
+                short bufferValue = (short)m_DirList[bytesWalls[0]];
+                if (cell.isHole)
+                {
+                    bufferValue |= kHoleFlag;
                 }
 
-                bufferValue |= kHomebaseFlag;
-            }
+                if (cell.homebase != null)
+                {
+                    var homebase = cell.homebase.GetComponent<HomebaseAuthoring>();
+                    switch (homebase.Player)
+                    {
+                        case Players.Player2:
+                            bufferValue |= LbPlayer.kPlayer2Flag;
+                            break;
 
-            dirMapbuffer.Add(bufferValue);
-            
+                        case Players.Player3:
+                            bufferValue |= LbPlayer.kPlayer3Flag;
+                            break;
+
+                        case Players.Player4:
+                            bufferValue |= LbPlayer.kPlayer4Flag;
+                            break;
+                    }
+
+                    bufferValue |= kHomebaseFlag;
+                }
+
+                dirMapbuffer.Add(bufferValue);
+            }
         }
 
         var catMapbuffer = dstManager.AddBuffer<LbCatMap>(entity);
@@ -126,7 +128,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     {
         var map = new Dictionary<Vector2Int, Cell>();
 
-        var cellObjs = GetComponentsInChildren<Cell>();
+        var cellObjs = FindObjectsOfType<Cell>();
         foreach (var cell in cellObjs)
             map.Add(cell.location, cell);
 
@@ -140,7 +142,7 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     {
         Dictionary<Vector2Int, WallData> wallMap = new Dictionary<Vector2Int, WallData>();
 
-        var walls = GetComponentsInChildren<Wall>();
+        var walls = FindObjectsOfType<Wall>();
         foreach (var wall in walls)
             AddWallToDictionary(ref wallMap, wall);
 

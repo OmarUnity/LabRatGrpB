@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 using Unity.Transforms;
+using Unity.Burst;
 
 // This system updates all entities in the scene with Translation, LbMovementSpeed and LbFall component.
 [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -16,7 +17,7 @@ public class FallSystem : JobComponentSystem
     }
 
     // Use the [BurstCompile] attribute to compile a job with Burst.
-    //[BurstCompile]
+    [BurstCompile]
     struct FallJob : IJobForEachWithEntity<Translation, LbMovementSpeed, LbFall>
     {
         public float DeltaTime;

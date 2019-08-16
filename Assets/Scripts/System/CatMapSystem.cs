@@ -13,7 +13,7 @@ public class CatMapSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        m_Query = GetEntityQuery(typeof(LbCatMap));
+        m_Query = GetEntityQuery(typeof(LbBoard), typeof(LbCatMap));
         m_CatQuery = GetEntityQuery(typeof(LbCat), typeof(Translation));
     }
 

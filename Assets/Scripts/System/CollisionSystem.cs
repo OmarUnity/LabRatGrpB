@@ -7,78 +7,53 @@ using UnityEngine;
 
 public class CollisionSystem : JobComponentSystem
 {
-    EntityCommandBufferSystem   m_Barrier;
-    EntityQuery                 catsGroup;
-    EntityQuery                 ratsGroup;
+    EntityCommandBufferSystem m_Barrier;
+    EntityQuery m_BoardQuery;
 
     protected override void OnCreate()
     {
         m_Barrier = World.Active.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-
-        catsGroup = GetEntityQuery( ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<LbCat>() );
-        ratsGroup = GetEntityQuery( ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<LbRat>() );
+        m_BoardQuery = GetEntityQuery(typeof(LbBoard), typeof(LbCatMap));
     }
 
-    struct CollisionJob : IJobChunk
+    struct CollisionJob : IJobForEachWithEntity<LbRat, Translation>
     {
-        public float radius;
-        [ReadOnly] public ArchetypeChunkComponentType<Translation>  translationType;
-        [ReadOnly] public ArchetypeChunkEntityType                  entityCatType;
+        public const int kBitsInWord = sizeof(int) * 8;
 
-        public EntityCommandBuffer.Concurrent                       commandBuffer;
+        public int Size;
+        public EntityCommandBuffer.Concurrent CommandBuffer;
+        [ReadOnly] public NativeArray<LbCatMap> CatLocationBuffer;
 
-        [DeallocateOnJobCompletion]
-        [ReadOnly] public NativeArray<Translation>                  entitiesToVerifyCollision;
-        [DeallocateOnJobCompletion]
-        [ReadOnly] public NativeArray<Entity>                       entityRats;
-
-        // chunkIndex == Job id
-        public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
+        public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbRat rat, [ReadOnly] ref Translation translation)
         {
-            var chunkTranslations   = chunk.GetNativeArray( translationType );
-            var chunkEntities       = chunk.GetNativeArray( entityCatType );
+            var position = translation.Value;
 
-            for (int i = 0; i < chunk.Count; i++)
+            var bufferBitIndex = ((int)position.z) * Size + (int)position.x;
+            var bufferWordIndex = bufferBitIndex / kBitsInWord;
+            var bitOffset = bufferBitIndex % kBitsInWord;
+
+            var currentWord = CatLocationBuffer[bufferWordIndex].Value;
+            var bit = 1 << bitOffset;
+
+            if ((currentWord & bit) == bit)
             {
-                Translation catTranslation  = chunkTranslations[ i ];
-                //Entity catEntity            = chunkEntities[ i ];
-
-                for (int j = 0; j < entitiesToVerifyCollision.Length; j++)
-                {
-                    Translation ratTranslation  = entitiesToVerifyCollision[i];
-                    Entity      ratEntity       = entityRats[i];
-
-                    if ( IsColliding( catTranslation.Value, ratTranslation.Value, radius ) )
-                    {
-                        commandBuffer.AddComponent<LbDestroy>(chunkIndex, ratEntity);
-                    }
-                }
+                CommandBuffer.AddComponent(jobIndex, entity, new LbDestroy());
             }
         }
-
-        static bool IsColliding(float3 pos1, float3 pos2, float radiusSqr)
-        {
-            float3 delta        = pos1 - pos2;
-            float distanceSqr   = delta.x * delta.x + delta.z * delta.z;
-
-            return distanceSqr <= radiusSqr;
-        }
     }
-
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
+        var boardEntity = m_BoardQuery.GetSingletonEntity();
+        var board = m_BoardQuery.GetSingleton<LbBoard>();
+        var bufferLookup = GetBufferFromEntity<LbCatMap>();
+
         var collisionJob = new CollisionJob
         {
-            radius                      = 70.0f,
-            translationType             = GetArchetypeChunkComponentType<Translation>(),
-            entityCatType               = GetArchetypeChunkEntityType(),
-
-            entitiesToVerifyCollision   = ratsGroup.ToComponentDataArray<Translation>( Allocator.TempJob ),
-            entityRats                  = ratsGroup.ToEntityArray( Allocator.TempJob ),
-
-            commandBuffer               = m_Barrier.CreateCommandBuffer().ToConcurrent()
-        }.Schedule( catsGroup, inputDeps );
+            Size = board.SizeY,
+            CatLocationBuffer = bufferLookup[boardEntity].AsNativeArray(),
+            CommandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent(),
+        }.Schedule(this, inputDeps);
 
         m_Barrier.AddJobHandleForProducer( collisionJob );
 
