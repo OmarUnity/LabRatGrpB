@@ -17,11 +17,10 @@ public class ReachTargetSystem : JobComponentSystem
     {
         public NativeQueue<Entity>.ParallelWriter Queue;
 
-        public void Execute(Entity entity, int index, ref LbDistanceToTarget distanceToTarget)
+        public void Execute(Entity entity, int index, [ReadOnly] ref LbDistanceToTarget distanceToTarget)
         {
-            if (distanceToTarget.Value <= 0.00001f)
+            if (distanceToTarget.Value >= 1.0f)
             {   
-                distanceToTarget.Value = 1.0f;
                 Queue.Enqueue(entity);
             }
         }

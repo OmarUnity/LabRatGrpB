@@ -1,86 +1,67 @@
-﻿using System.Diagnostics;
-using UnityEngine;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Collections;
-using Unity.Mathematics;
-using Debug = UnityEngine.Debug;
-
 
 public class CheckCellSystem : JobComponentSystem
 {
     private const short kHoleFlag = 0x100;
     private const short kHomebaseFlag = 0x800;
 
-    private EntityQuery m_Reachquery;
-    private EntityQuery m_Boardquery;
+    private EntityQuery m_ReachQuery;
+    private EntityQuery m_BoardQuery;
 
     private EntityCommandBufferSystem m_Barrier;
 
-    
-    struct CheckCellJob : IJobChunk
+    protected override void OnCreate()
     {
-        public EntityCommandBuffer.Concurrent CommandBuffer;
-        
-        [ReadOnly] public int2 BoardSize;
-        [ReadOnly] public Entity BoardEntity;
-        [ReadOnly] public ArchetypeChunkEntityType EntityType;
-        [ReadOnly] public BufferFromEntity<LbDirectionMap> FlowMap;
-        [ReadOnly] public ArchetypeChunkComponentType<Translation> TranslationType;
-        [ReadOnly] public ArchetypeChunkComponentType<LbNorthDirection> DirectionNorthType;
-        [ReadOnly] public ArchetypeChunkComponentType<LbSouthDirection> DirectionSouthType;
-        [ReadOnly] public ArchetypeChunkComponentType<LbEastDirection> DirectionEastType;
-        [ReadOnly] public ArchetypeChunkComponentType<LbWestDirection> DirectionWestType;
+        m_ReachQuery = GetEntityQuery(ComponentType.ReadOnly<LbReachCell>(), ComponentType.ReadOnly<Translation>(), typeof(LbDirection), typeof(LbMovementTarget));
+        m_BoardQuery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>(), ComponentType.ReadOnly<LbDirectionMap>());
 
+        m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
+    }
+
+    struct CheckCellNewJob : IJobChunk
+    {
+        [ReadOnly] public int Size;
+        [ReadOnly] public NativeArray<LbDirectionMap> Buffer;
+
+        [ReadOnly] public ArchetypeChunkEntityType EntityType;
+        [ReadOnly] public ArchetypeChunkComponentType<Translation> TranslationType;
         [ReadOnly] public ArchetypeChunkComponentType<LbRat> RatType;
 
+        public ArchetypeChunkComponentType<LbDirection> DirectionType;
+        public ArchetypeChunkComponentType<LbMovementTarget> TargetType;
+        public ArchetypeChunkComponentType<LbDistanceToTarget> DistanceToTargetType;
+
+        public EntityCommandBuffer.Concurrent CommandBuffer;
 
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
-            var buffer = FlowMap[BoardEntity];
             var entities = chunk.GetNativeArray(EntityType);
-            var isRats = chunk.Has(RatType);
+            var translations = chunk.GetNativeArray(TranslationType);
+            var directions = chunk.GetNativeArray(DirectionType);
+            var targets = chunk.GetNativeArray(TargetType);
+            var distanceTargets = chunk.GetNativeArray(DistanceToTargetType);
+            var areRats = chunk.Has(RatType);
 
-            var   byteShift = 0;
-            var   componentType = 0;
-            
-            if (chunk.Has(DirectionNorthType))
-            {
-                byteShift = 6;
-                componentType = 0; 
-            }
-            else if (chunk.Has(DirectionSouthType))
-            {
-                byteShift = 2;
-                componentType = 1;
-            }
-            else if (chunk.Has(DirectionWestType))
-            {
-                byteShift = 0;
-                componentType = 2;
-            }
-            else if (chunk.Has(DirectionEastType))
-            {
-                byteShift = 4;
-                componentType = 3;
-            }
-
-            var chunkTranslation = chunk.GetNativeArray(TranslationType);
-            
-            for (var i = 0; i < chunk.Count; i++)
+            for (int i=0; i<chunk.Count; ++i)
             {
                 var entity = entities[i];
-                var translation = chunkTranslation[i].Value;
-                
-                var index = ((int) translation.z) * BoardSize.y + (int) translation.x;
-                
-                var cellMapValue = buffer[index].Value;
+                var translation = translations[i].Value;
+                var direction = directions[i];
+
+                var index = ((int)translation.z) * Size + (int)translation.x;
+                if (index < 0 || index >= Buffer.Length)
+                    continue;
+
+                var cellMapValue = Buffer[index].Value;
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
                 {
-                    RemoveMovement(chunkIndex, entity, componentType);
+                    CommandBuffer.RemoveComponent<LbDirection>(chunkIndex, entity);
+
                     CommandBuffer.AddComponent(chunkIndex, entity, new LbFall());
-                    if (isRats)
+                    if (areRats)
                         CommandBuffer.AddComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
                     else
                         CommandBuffer.SetComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
@@ -93,117 +74,55 @@ public class CheckCellSystem : JobComponentSystem
                     var player = (cellMapValue >> 9) & 0x3;
 
                     var scoreEntity = CommandBuffer.CreateEntity(chunkIndex);
-                    if (isRats)
+                    if (areRats)
                         CommandBuffer.AddComponent(chunkIndex, scoreEntity, new LbRatScore() { Player = (byte)player });
                     else
                         CommandBuffer.AddComponent(chunkIndex, scoreEntity, new LbCatScore() { Player = (byte)player });
                 }
                 else
                 {
-                    var nextDir = (cellMapValue >> byteShift) & 0x3;
-                    RemoveMovement(chunkIndex, entity, componentType);
-                    MoveToNextCell(chunkIndex, entity, nextDir);
+                    var nextDirectionByte = (byte)((cellMapValue >> LbDirection.GetByteShift(direction.Value)) & 0x3);
+                    directions[i] = new LbDirection() { Value = nextDirectionByte };
+                    targets[i] = new LbMovementTarget() { From = translation, To = translation + LbDirection.GetDirection(nextDirectionByte) };
+                    distanceTargets[i] = new LbDistanceToTarget() { Value = 0.0f };
                 }
 
                 CommandBuffer.RemoveComponent<LbReachCell>(chunkIndex, entity);
-            } 
-        }
-
-        private  void RemoveMovement(int chunkIndex, Entity entity, int componentType)
-        {
-            switch (componentType)
-            {
-                case 0:
-                    CommandBuffer.RemoveComponent<LbNorthDirection>(chunkIndex, entity);
-                    break;
-                case 1:
-                    CommandBuffer.RemoveComponent<LbSouthDirection>(chunkIndex, entity);
-                    break;
-                case 2:
-                    CommandBuffer.RemoveComponent<LbWestDirection>(chunkIndex, entity);
-                    break;
-                case 3:
-                    CommandBuffer.RemoveComponent<LbEastDirection>(chunkIndex, entity);
-                    break;
             }
         }
-
-        /// <summary>
-        /// Move the entity to the next cell
-        /// </summary>
-        private void MoveToNextCell(int chunkIndex, Entity entity, int nextDir)
-        {
-            switch (nextDir)
-            {
-                //North
-                case 0x0:
-                    CommandBuffer.AddComponent<LbNorthDirection>(chunkIndex, entity);
-                    break;
-
-                //South
-                case 0x2:
-                    CommandBuffer.AddComponent<LbSouthDirection>(chunkIndex, entity);
-                    break;
-
-                //West
-                case 0x3:
-                    CommandBuffer.AddComponent<LbWestDirection>(chunkIndex, entity);
-                    break;
-
-                //East
-                case 0x1:
-                    CommandBuffer.AddComponent<LbEastDirection>(chunkIndex, entity);
-                    break;
-            }
-        }
-    }
-
-    protected override void OnCreate()
-    {
-        m_Reachquery = GetEntityQuery(ComponentType.ReadOnly<LbReachCell>(),ComponentType.ReadOnly<Translation>());
-        m_Boardquery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>());
-        m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var lbBoardType = GetArchetypeChunkComponentType<LbBoard>();
-        var array = m_Boardquery.ToEntityArray(Allocator.TempJob);
-        var arrayLbBoard = m_Boardquery.ToComponentDataArray<LbBoard>(Allocator.TempJob);
-        var boardEntity = array[0];
-        var lbBoard = arrayLbBoard[0];
+        var board = m_BoardQuery.GetSingleton<LbBoard>();
+        var boardEntity = m_BoardQuery.GetSingletonEntity();
+        var bufferLookup = GetBufferFromEntity<LbDirectionMap>();
 
-        var commandBuffer  =  m_Barrier.CreateCommandBuffer().ToConcurrent();
-        var translationType = GetArchetypeChunkComponentType<Translation>();
-        var directionNorthType = GetArchetypeChunkComponentType<LbNorthDirection>();
-        var directionSouthType = GetArchetypeChunkComponentType<LbSouthDirection>();
-        var directionWestType = GetArchetypeChunkComponentType<LbWestDirection>();
-        var directionEastType = GetArchetypeChunkComponentType<LbEastDirection>();
+        var buffer = bufferLookup[boardEntity];
+        var bufferArray = buffer.AsNativeArray();
+
         var entityType = GetArchetypeChunkEntityType();
+        var translationType = GetArchetypeChunkComponentType<Translation>();
+        var directionType = GetArchetypeChunkComponentType<LbDirection>();
+        var targetType = GetArchetypeChunkComponentType<LbMovementTarget>();
+        var distanceTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>();
         var ratType = GetArchetypeChunkComponentType<LbRat>();
         
-        array.Dispose();
-        arrayLbBoard.Dispose();
-        
-        var lookup = GetBufferFromEntity<LbDirectionMap>();
-
-        var job = new CheckCellJob
+        var job = new CheckCellNewJob
         {
-
+            Size = board.SizeY,
+            Buffer = bufferArray,
             
-            BoardEntity = boardEntity,
             EntityType = entityType,
-            FlowMap = lookup,
-            CommandBuffer = commandBuffer,
             TranslationType = translationType,
-            DirectionNorthType = directionNorthType,
-            DirectionSouthType = directionSouthType,
-            DirectionWestType = directionWestType,
-            DirectionEastType = directionEastType,
             RatType = ratType,
-            BoardSize = new int2(lbBoard.SizeX,lbBoard.SizeY)
-            
-        }.Schedule(m_Reachquery, inputDeps);
+
+            DirectionType = directionType,
+            TargetType = targetType,
+            DistanceToTargetType = distanceTargetType,
+
+            CommandBuffer = m_Barrier.CreateCommandBuffer().ToConcurrent()
+        }.Schedule(m_ReachQuery, inputDeps);
         
         m_Barrier.AddJobHandleForProducer(job);
         return job;

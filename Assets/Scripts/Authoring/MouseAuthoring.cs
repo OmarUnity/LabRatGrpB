@@ -19,24 +19,8 @@ public class MouseAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         dstManager.AddComponentData(entity, new LbRat());
         dstManager.AddComponentData(entity, new LbMovementSpeed() { Value = Speed });
         dstManager.AddComponentData(entity, new LbDistanceToTarget() { Value = 1.0f });
-
-        switch (Direction)
-        {
-            case Directions.East:
-                dstManager.AddComponentData(entity, new LbEastDirection());
-                break;
-
-            case Directions.North:
-                dstManager.AddComponentData(entity, new LbNorthDirection());
-                break;
-
-            case Directions.South:
-                dstManager.AddComponentData(entity, new LbSouthDirection());
-                break;
-
-            default:
-                dstManager.AddComponentData(entity, new LbWestDirection());
-                break;
-        }
+        dstManager.AddComponentData(entity, new LbDirection() { Value = (byte)Direction });
+        dstManager.AddComponentData(entity, new LbMovementTarget());
+        
     }
 }

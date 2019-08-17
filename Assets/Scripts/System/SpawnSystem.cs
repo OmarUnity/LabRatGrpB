@@ -1,13 +1,12 @@
-﻿using System;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Jobs;
 using Unity.Transforms;
+using Unity.Mathematics;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 public class SpawnSystem : JobComponentSystem
 {
-
     enum InstanceType
     {
         Cat, Mouse
@@ -48,45 +47,30 @@ public class SpawnSystem : JobComponentSystem
         private void DoSpawn(int index, ref Translation translation, ref Rotation rotation, ref Entity entityType, float speed, InstanceType instanceType)
         {
             var instance = CommandBuffer.Instantiate(index, entityType);
-            CommandBuffer.SetComponent(index, instance, new Translation{Value = translation.Value});
-            CommandBuffer.SetComponent(index, instance, new Rotation{Value = rotation.Value});
-            CommandBuffer.AddComponent<LbReachCell>(index, instance); // Uncomment before commiting!!!
-            if (RandomNumber == 0)
-            {
-                CommandBuffer.AddComponent<LbNorthDirection>(index, instance);
-            }
-            else if (RandomNumber == 1)
-            {
-                CommandBuffer.AddComponent<LbSouthDirection>(index, instance);
-            }
-            else if (RandomNumber == 2)
-            {
-                CommandBuffer.AddComponent<LbEastDirection>(index, instance);
-            }
-            else
-            {
-                CommandBuffer.AddComponent<LbWestDirection>(index, instance);
-            }
-                
-            CommandBuffer.AddComponent<LbMovementSpeed>( index, instance);
-            CommandBuffer.AddComponent<LbDistanceToTarget>( index, instance );
-            CommandBuffer.AddComponent<LbRotationSpeed>( index, instance );
-                
-            CommandBuffer.SetComponent(index, instance, new LbMovementSpeed{ Value = speed});
-            CommandBuffer.SetComponent(index, instance, new LbDistanceToTarget{ Value = 1});// Set to 1 before commiting!!! 
 
+            CommandBuffer.SetComponent(index, instance, new Translation{ Value = translation.Value });
+            CommandBuffer.SetComponent(index, instance, new Rotation{ Value = rotation.Value });
+
+            CommandBuffer.AddComponent<LbReachCell>(index, instance);
+            CommandBuffer.AddComponent<LbRotationSpeed>(index, instance);
+            CommandBuffer.AddComponent(index, instance, new LbMovementSpeed { Value = speed });
+            CommandBuffer.AddComponent(index, instance, new LbMovementTarget());
+            CommandBuffer.AddComponent(index, instance, new LbDistanceToTarget { Value = 0.0f });
+
+            CommandBuffer.AddComponent(index, instance, new LbDirection() {Value = (byte)RandomNumber });
+                
             if (instanceType == InstanceType.Cat)
             {
-                CommandBuffer.AddComponent<LbCat>( index, instance);
-                CommandBuffer.AddComponent(index, instance, new LbLifetime(){ Value = 30.0f});
+                CommandBuffer.AddComponent<LbCat>(index, instance);
+                CommandBuffer.AddComponent(index, instance, new LbLifetime() {Value = 30.0f });
             }
             else if (instanceType == InstanceType.Mouse)
             {
-                CommandBuffer.AddComponent<LbRat>( index, instance);
+                CommandBuffer.AddComponent<LbRat>(index, instance);
             }
         }
     }
-    
+
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         var jobHandle = new SpawnJob

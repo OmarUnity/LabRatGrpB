@@ -1,33 +1,54 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
+using Unity.Mathematics;
 
-/// <summary>
-/// Used by entities that are moving in the Up direction
-/// 3D Vector (0, 0, 1)
-/// </summary>
-public struct LbNorthDirection : IComponentData
+[Serializable]
+public struct LbDirection : IComponentData
 {
-}
+    public byte Value;
 
-/// <summary>
-/// Used by entities that are moving in the Down direction
-/// 3D Vector (0, 0, -1)
-/// </summary>
-public struct LbSouthDirection : IComponentData
-{
-}
+    public static  float3 GetDirection(byte directionByte)
+    {
+        if (directionByte == 0x0)
+        {
+            return new float3(0.0f, 0.0f, 1.0f);
+        }
+        else if (directionByte == 0x1)
+        {
+            return new float3(1.0f, 0.0f, 0.0f);
+        }
+        else if (directionByte == 0x2)
+        {
+            return new float3(0.0f, 0.0f, -1.0f);
+        }
+        else
+        {
+            return new float3(-1.0f, 0.0f, 0.0f);
+        }
+    }
 
-/// <summary>
-/// Used by entities that are moving in the Up direction
-/// 3D Vector (1, 0, 0)
-/// </summary>
-public struct LbEastDirection : IComponentData
-{
-}
+    public static int GetByteShift(byte direction)
+    {
+        switch (direction)
+        {
+            // North
+            case 0x0:
+                return 6;
 
-/// <summary>
-/// Used by entities that are moving in the Left direction
-/// 3D Vector (-1, 0, 0)
-/// </summary>
-public struct LbWestDirection : IComponentData
-{
+            // South
+            case 0x2:
+                return 2;
+
+            // West
+            case 0x3:
+                return 0;
+
+            // East
+            case 0x1:
+                return 4;
+
+            default:
+                return 0;
+        }
+    }
 }

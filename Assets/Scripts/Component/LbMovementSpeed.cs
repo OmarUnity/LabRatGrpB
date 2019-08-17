@@ -1,5 +1,6 @@
 ﻿using System;
 using Unity.Entities;
+using Unity.Mathematics;
 
 /// <summary>
 /// Speed value for Entities that can move
