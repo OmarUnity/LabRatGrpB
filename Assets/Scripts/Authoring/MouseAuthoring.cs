@@ -15,7 +15,6 @@ public class MouseAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     // To a good runtime representation (Represented in radians)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        dstManager.AddComponentData(entity, new LbReachCell());
         dstManager.AddComponentData(entity, new LbRat());
         dstManager.AddComponentData(entity, new LbMovementSpeed() { Value = Speed });
         dstManager.AddComponentData(entity, new LbDistanceToTarget() { Value = 1.0f });

@@ -15,7 +15,7 @@ public class CheckCellSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        m_ReachQuery = GetEntityQuery(ComponentType.ReadOnly<LbReachCell>(), ComponentType.ReadOnly<Translation>(), typeof(LbDirection), typeof(LbMovementTarget));
+        m_ReachQuery = GetEntityQuery(ComponentType.ReadOnly<Translation>(), typeof(LbDirection), typeof(LbMovementTarget));
         m_BoardQuery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>(), ComponentType.ReadOnly<LbDirectionMap>());
 
         m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
@@ -51,9 +51,11 @@ public class CheckCellSystem : JobComponentSystem
                 var translation = translations[i].Value;
                 var direction = directions[i];
 
-                var index = ((int)translation.z) * Size + (int)translation.x;
-                if (index < 0 || index >= Buffer.Length)
+                var distance = distanceTargets[i].Value;
+                if (distance < 1.0f)
                     continue;
+
+                var index = ((int)translation.z) * Size + (int)translation.x;
 
                 var cellMapValue = Buffer[index].Value;
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
@@ -81,13 +83,13 @@ public class CheckCellSystem : JobComponentSystem
                 }
                 else
                 {
+                    translation.y = 1.0f;
+
                     var nextDirectionByte = (byte)((cellMapValue >> LbDirection.GetByteShift(direction.Value)) & 0x3);
                     directions[i] = new LbDirection() { Value = nextDirectionByte };
                     targets[i] = new LbMovementTarget() { From = translation, To = translation + LbDirection.GetDirection(nextDirectionByte) };
                     distanceTargets[i] = new LbDistanceToTarget() { Value = 0.0f };
                 }
-
-                CommandBuffer.RemoveComponent<LbReachCell>(chunkIndex, entity);
             }
         }
     }

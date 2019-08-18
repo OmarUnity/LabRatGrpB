@@ -9,7 +9,6 @@ using Unity.Burst;
 public class MovementSystem : JobComponentSystem
 {
     [BurstCompile]
-    [ExcludeComponent(typeof(LbReachCell))]
     public struct MovementJob : IJobForEach<Translation, LbMovementTarget, LbMovementSpeed, LbDistanceToTarget>
     {
         public float DeltaTime;
