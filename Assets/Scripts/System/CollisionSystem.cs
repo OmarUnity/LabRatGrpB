@@ -33,16 +33,16 @@ public class CollisionSystem : JobComponentSystem
     {
         public const int kBitsInWord = sizeof(int) * 8;
 
-        public int Size;
-        
+        [ReadOnly] public int2 BoardSize;
         [ReadOnly] public NativeArray<LbCatMap> CatLocationBuffer;
+
         public NativeQueue<Entity>.ParallelWriter Queue;
 
         public void Execute(Entity entity, int jobIndex, [ReadOnly] ref LbRat rat, [ReadOnly] ref Translation translation)
         {
             var position = translation.Value;
 
-            var bufferBitIndex = ((int)position.z) * Size + (int)position.x;
+            var bufferBitIndex = ((int)position.z) * BoardSize.y + (int)position.x;
             var bufferWordIndex = bufferBitIndex / kBitsInWord;
             var bitOffset = bufferBitIndex % kBitsInWord;
 
@@ -79,7 +79,7 @@ public class CollisionSystem : JobComponentSystem
 
         var handle = new CollisionJob
         {
-            Size = board.SizeY,
+            BoardSize = new int2(board.SizeX, board.SizeY),
             CatLocationBuffer = bufferLookup[boardEntity].AsNativeArray(),
             Queue = m_Queue.AsParallelWriter(),
         }.Schedule(this, inputDeps);

@@ -11,6 +11,7 @@ public class MovementSystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
 
+    EntityQuery m_BoardQuery;
     EntityQuery m_Group_NorthMovement;
     EntityQuery m_Group_SouthMovement;
     EntityQuery m_Group_WestMovement;
@@ -18,107 +19,67 @@ public class MovementSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        // The command buffer is created
         m_Barrier = World.GetOrCreateSystem<LbSimulationBarrier>();
+        m_BoardQuery = GetEntityQuery(typeof(LbBoard));
 
-        // It's defined the query for the NORTH JOB
-        var query_North = new EntityQueryDesc
+        m_Group_NorthMovement = GetEntityQuery(CreateQueryFor<LbNorthDirection>());
+        m_Group_SouthMovement = GetEntityQuery(CreateQueryFor<LbSouthDirection>());
+        m_Group_WestMovement = GetEntityQuery(CreateQueryFor<LbWestDirection>()); 
+        m_Group_EastMovement = GetEntityQuery(CreateQueryFor<LbEastDirection>());
+    }
+
+    private EntityQueryDesc CreateQueryFor<T>() where T : IComponentData
+    {
+        var queryDesc = new EntityQueryDesc
         {
             None = new ComponentType[] { typeof(LbReachCell) },
-            All = new ComponentType[] {
-                                        ComponentType.ReadOnly<LbNorthDirection>(),
-                                        ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation),
-                                        ComponentType.ReadWrite<LbDistanceToTarget>()
-                                      }
+            All = new ComponentType[]
+            {
+                ComponentType.ReadOnly<T>(),
+                ComponentType.ReadOnly<LbMovementSpeed>(),
+                typeof(Translation),
+                ComponentType.ReadWrite<LbDistanceToTarget>()
+            }
         };
-
-        m_Group_NorthMovement = GetEntityQuery(query_North);
-
-        // It's defined the query for the SOUTH JOB
-        var query_South = new EntityQueryDesc
-        {
-            None = new ComponentType[] { typeof(LbReachCell) },
-            All = new ComponentType[] {
-                                        ComponentType.ReadOnly<LbSouthDirection>(),
-                                        ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation),
-                                        ComponentType.ReadWrite<LbDistanceToTarget>()
-                                      }
-        };
-
-        m_Group_SouthMovement = GetEntityQuery(query_South);
-
-        // It's defined the query for the WEST JOB
-        var query_West = new EntityQueryDesc
-        {
-            None = new ComponentType[] { typeof(LbReachCell) },
-            All = new ComponentType[] {
-                                        ComponentType.ReadOnly<LbWestDirection>(),
-                                        ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation),
-                                        ComponentType.ReadWrite<LbDistanceToTarget>()
-                                      }
-        };
-
-        m_Group_WestMovement = GetEntityQuery(query_West);
-
-        // It's defined the query for the EAST JOB
-        var query_East = new EntityQueryDesc
-        {
-            None = new ComponentType[] { typeof(LbReachCell) },
-            All = new ComponentType[] {
-                                        ComponentType.ReadOnly<LbEastDirection>(),
-                                        ComponentType.ReadOnly<LbMovementSpeed>(),
-                                        typeof(Translation),
-                                        ComponentType.ReadWrite<LbDistanceToTarget>()
-                                      }
-        };
-
-        m_Group_EastMovement = GetEntityQuery(query_East);
+        return queryDesc;
     }
 
     [BurstCompile]
     public struct Move_Job : IJobChunk
     {
-        public float deltaTime;
-        public float3 direction;
+        public float DeltaTime;
+        public float3 Direction;
+        public int2 BoardSize;
 
-        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation> translationType;
-        [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed> movementSpeedType;
-        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget> distanceToTargetType;
-
-        // If you need to reach some Entity from an IJobChunk, 
-        //[ReadOnly] public ArchetypeChunkComponentType<Entity> entityType;
+        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<Translation> TranslationType;
+        [ReadOnly] public ArchetypeChunkComponentType<LbMovementSpeed> MovementSpeedType;
+        [NativeDisableContainerSafetyRestriction] public ArchetypeChunkComponentType<LbDistanceToTarget> DistanceToTargetType;
 
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
-            // Get information of a certain chunk
-            var chunkTranslations       = chunk.GetNativeArray(translationType);
-            var chunkMovementSpeed      = chunk.GetNativeArray(movementSpeedType);
-            var chunkDistanceToTarget   = chunk.GetNativeArray(distanceToTargetType);
-            //var chunkEntity             = chunk.GetNativeArray( entityType );
+            var chunkTranslations = chunk.GetNativeArray(TranslationType);
+            var chunkMovementSpeed = chunk.GetNativeArray(MovementSpeedType);
+            var chunkDistanceToTarget = chunk.GetNativeArray(DistanceToTargetType);
 
             for (var i = 0; i < chunk.Count; i++)
             {
-                var translation                 = chunkTranslations[i];
-                var movementSpeed               = chunkMovementSpeed[i];
-                var distanceToTarget            = chunkDistanceToTarget[i];
+                var movementSpeed = chunkMovementSpeed[i].Value;
 
-                translation.Value               += direction * movementSpeed.Value * deltaTime;
-                distanceToTarget.Value          -= movementSpeed.Value * deltaTime;
+                var translation = chunkTranslations[i];
+                var distanceToTarget = chunkDistanceToTarget[i];
 
-                chunkDistanceToTarget[i]        = distanceToTarget;
-                chunkTranslations[i]            = translation;
+                var position = translation.Value + Direction * movementSpeed * DeltaTime;
+                position.x = math.clamp(position.x, 0.0f, BoardSize.x - 1);
+                position.z = math.clamp(position.z, 0.0f, BoardSize.y - 1);
+                translation.Value = position;
+                chunkTranslations[i] = translation;
 
-                if (distanceToTarget.Value <= 0)
+                distanceToTarget.Value -= movementSpeed * DeltaTime;
+                if (distanceToTarget.Value < 0.0f)
                 {
-                    translation.Value           = math.round(translation.Value);
-                    chunkTranslations[i]        = translation;
-
-                    distanceToTarget.Value      = 0;
-                    chunkDistanceToTarget[i]    = distanceToTarget;
+                    distanceToTarget.Value = 0.0f;
                 }
+                chunkDistanceToTarget[i] = distanceToTarget; 
             }
         }
     }
@@ -126,46 +87,51 @@ public class MovementSystem : JobComponentSystem
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         float deltaTime = Mathf.Clamp(Time.deltaTime, 0.0f, 0.3f);
+        var board = m_BoardQuery.GetSingleton<LbBoard>();
+        var boardSize = new int2(board.SizeX, board.SizeY);
 
         var job_North = new Move_Job
         {
-            deltaTime = deltaTime,
-            direction = new float3(0, 0, 1),
-            //commandBuffer       = m_Barrier.CreateCommandBuffer().ToConcurrent(),
+            DeltaTime = deltaTime,
+            Direction = new float3(0, 0, 1),
+            BoardSize = boardSize,
 
-            translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
-            distanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
+            TranslationType = GetArchetypeChunkComponentType<Translation>(),
+            MovementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            DistanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_NorthMovement, inputDeps);
 
         var job_South = new Move_Job
         {
-            deltaTime = deltaTime,
-            direction = new float3(0, 0, -1),
+            DeltaTime = deltaTime,
+            Direction = new float3(0, 0, -1),
+            BoardSize = boardSize,
 
-            translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
-            distanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
+            TranslationType = GetArchetypeChunkComponentType<Translation>(),
+            MovementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            DistanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_SouthMovement, inputDeps);
 
         var job_West = new Move_Job
         {
-            deltaTime = deltaTime,
-            direction = new float3(-1, 0, 0),
+            DeltaTime = deltaTime,
+            Direction = new float3(-1, 0, 0),
+            BoardSize = boardSize,
 
-            translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
-            distanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
+            TranslationType = GetArchetypeChunkComponentType<Translation>(),
+            MovementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            DistanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_WestMovement, inputDeps);
 
         var job_East = new Move_Job
         {
-            deltaTime = deltaTime,
-            direction = new float3(1, 0, 0),
+            DeltaTime = deltaTime,
+            Direction = new float3(1, 0, 0),
+            BoardSize = boardSize,
 
-            translationType = GetArchetypeChunkComponentType<Translation>(),
-            movementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
-            distanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
+            TranslationType = GetArchetypeChunkComponentType<Translation>(),
+            MovementSpeedType = GetArchetypeChunkComponentType<LbMovementSpeed>(true),
+            DistanceToTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>()
         }.Schedule(m_Group_EastMovement, inputDeps);
 
         var finalHandle = JobHandle.CombineDependencies(JobHandle.CombineDependencies(job_North, job_South, job_East), job_West);
