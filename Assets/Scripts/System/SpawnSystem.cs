@@ -13,12 +13,12 @@ public class SpawnSystem : JobComponentSystem
         Cat, Mouse
     }
     
-    private EntityCommandBufferSystem _commandBufferSystem;
-    private Random _random = new Random(1);
+    private EntityCommandBufferSystem m_CommandBufferSystem;
+    private Random m_Random = new Random(1);
     
     protected override void OnCreate()
     {
-        _commandBufferSystem = World.GetOrCreateSystem<LbSimulationBarrier>();
+        m_CommandBufferSystem = World.GetOrCreateSystem<LbSimulationBarrier>();
     }
 
     struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>
@@ -78,11 +78,11 @@ public class SpawnSystem : JobComponentSystem
         var jobHandle = new SpawnJob
         {
             DeltaTime = Time.deltaTime,
-            CommandBuffer = _commandBufferSystem.CreateCommandBuffer().ToConcurrent(),
-            RandomNumber = _random.NextInt(0, 4)
+            CommandBuffer = m_CommandBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            RandomNumber = m_Random.NextInt(0, 4)
         }.Schedule(this, inputDeps);
-        
-        _commandBufferSystem.AddJobHandleForProducer(jobHandle);
+
+        m_CommandBufferSystem.AddJobHandleForProducer(jobHandle);
 
         return jobHandle;
     }
