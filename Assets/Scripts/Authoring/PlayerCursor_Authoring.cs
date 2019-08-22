@@ -17,7 +17,7 @@ public class PlayerCursor_Authoring : MonoBehaviour,IDeclareReferencedPrefabs, I
         dstManager.AddComponentData(entity, new LbPlayer { Value = (byte)PlayerId });
         dstManager.AddComponentData(entity, new LbCursor());
         dstManager.AddComponentData(entity, new LbCursorInit());
-        dstManager.AddComponentData(entity, new LbCursorArrow { ArrowPrefab = conversionSystem.GetPrimaryEntity(ArrowPrefab) });
+        dstManager.AddComponentData(entity, new LbArrowPrefab { Value = conversionSystem.GetPrimaryEntity(ArrowPrefab) });
         dstManager.AddComponentData(entity, new LbMovementTarget() { From = float3.zero, To = float3.zero });
         dstManager.AddComponentData(entity, new LbDistanceToTarget() { Value = 0.0f });
         dstManager.AddComponentData(entity, new LbMovementSpeed { Value = 0.5f });

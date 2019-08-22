@@ -5,7 +5,7 @@ using System;
 /// Contains all data needed by the cursor to spawn an arrow
 /// </summary>
 [Serializable]
-public struct LbCursorArrow : IComponentData
+public struct LbArrowPrefab : IComponentData
 {
-    public Entity ArrowPrefab;
+    public Entity Value;
 }
