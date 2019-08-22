@@ -6,8 +6,8 @@ using Unity.Mathematics;
 /// </summary>
 public struct LbArrowSpawner : IComponentData
 {
-    Entity Prefab;
-    byte PlayerId;
-    byte Direction;
-    float3 Location;
+    public Entity Prefab;
+    public byte PlayerId;
+    public byte Direction;
+    public float3 Location;
 }

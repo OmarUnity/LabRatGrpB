@@ -31,7 +31,7 @@ public class SpawnSystem : JobComponentSystem
 
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
-            uint newSeed = (uint)(Seed + chunkIndex);
+            uint newSeed = (uint)(Seed + chunkIndex * 1000);
             Random chunkRandom = new Random(newSeed);
 
             var spawners = chunk.GetNativeArray(SpawnerType);
