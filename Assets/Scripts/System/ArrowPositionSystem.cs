@@ -33,36 +33,46 @@ public class ArrowPositionSystem : JobComponentSystem
         _random.InitState();
     }
 
-    struct SpawnArrow : IJobForEachWithEntity<LbArrowPosition,LbPlayer,LbArrow>
+    struct SpawnArrow : IJob//ForEachWithEntity<LbArrowPosition,LbPlayer,LbArrow>
     {
         public int Seed;
         public int Size;
         public int RandomNumber;
         public EntityCommandBuffer.Concurrent CommandBuffer;
+        
+        [DeallocateOnJobCompletion]public NativeArray<Entity> Entities;
+        [DeallocateOnJobCompletion]public NativeArray<LbArrowPosition> ArrowPositions;
+        [DeallocateOnJobCompletion]public NativeArray<LbPlayer> Players;
 
-        public void Execute(Entity entity, int index, ref LbArrowPosition arrowPosition,[ReadOnly] ref LbPlayer player,[ReadOnly] ref LbArrow lbArrow)
+        public void Execute()
         {
-            var random = new Random((uint) ( Seed+index ));
-            var position = new float3(random.NextInt(0, Size), 1, random.NextInt(0, Size));
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                var random = new Random((uint) ( Seed+i ));
+                var position = new float3(random.NextInt(0, Size), 1, random.NextInt(0, Size));
             
-            
-            
-            
-            var instance = CommandBuffer.Instantiate(index,player.PrefabArrow);
-            CommandBuffer.AddComponent(index,instance,new LbLifetime { Value = 10f});
+                var instance = CommandBuffer.Instantiate(i,Players[i].PrefabArrow);
+                CommandBuffer.AddComponent(i,instance,new LbLifetime { Value = 10f});
            
-            CommandBuffer.SetComponent(index, instance, new Translation{Value = new float3(arrowPosition.Value.x,0.6f,arrowPosition.Value.z)});
-            arrowPosition.Value = position;
-            CommandBuffer.SetComponent(index,entity,arrowPosition);
+                CommandBuffer.SetComponent(i, instance, new Translation{Value = new float3(ArrowPositions[i].Value.x,0.6f,ArrowPositions[i].Value.z)});
+                var arrowPos = ArrowPositions[i];
+                arrowPos.Value = position;
+                ArrowPositions[i] = arrowPos;
+                
+                CommandBuffer.SetComponent(i,Entities[i],ArrowPositions[i]);
 //               
-            CommandBuffer.SetComponent(index, instance, new Rotation{Value = quaternion.EulerXYZ(math.radians(90),math.radians(90*RandomNumber),math.radians(0))});
-            CommandBuffer.RemoveComponent<LbArrow>(index,entity);
+                CommandBuffer.SetComponent(i, instance, new Rotation{Value = quaternion.EulerXYZ(math.radians(90),math.radians(90*RandomNumber),math.radians(0))});
+                CommandBuffer.RemoveComponent<LbArrow>(i,Entities[i]);
+            }
         }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
         LbBoard board = m_BoardQuery.GetSingleton<LbBoard>();
+        var entities = m_PlayerQuery.ToEntityArray(Allocator.TempJob);
+        var arrowPositions = m_PlayerQuery.ToComponentDataArray<LbArrowPosition>(Allocator.TempJob);
+        var players = m_PlayerQuery.ToComponentDataArray<LbPlayer>(Allocator.TempJob);
 
         var sRand = new System.Random();
         
@@ -71,11 +81,13 @@ public class ArrowPositionSystem : JobComponentSystem
             Seed = sRand.Next(int.MaxValue),
             Size = board.SizeY,
             RandomNumber = _random.NextInt(0, 4),
+            Entities = entities,
+            ArrowPositions = arrowPositions,
+            Players = players,
             CommandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent()
-        }.Schedule(m_PlayerQuery, inputDependencies);
+        }.Schedule(inputDependencies);
         
         m_EntityCommandBufferSystem.AddJobHandleForProducer(job);
-
         return job;
     }
 }
