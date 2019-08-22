@@ -5,7 +5,6 @@ using UnityEngine;
 using Unity.Transforms;
 using Unity.Burst;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
 public class FallSystem : JobComponentSystem
 {
     [BurstCompile]
@@ -15,7 +14,7 @@ public class FallSystem : JobComponentSystem
 
         public void Execute(Entity entity, int jobIndex, ref Translation translation, ref LbMovementSpeed speed, [ReadOnly] ref LbFall fallTag)
         {
-            speed.Value -= 4.9f * DeltaTime; // 9.8/2
+            speed.Value -= 4.9f * DeltaTime;
             translation.Value.y += speed.Value * DeltaTime;
         }
     }
