@@ -31,6 +31,10 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 
     private const short kHoleFlag = 0x100;
     private const short kHomebaseFlag = 0x800;
+    // public const short kPlayer1Flag = 0x000;
+    private const short kPlayer2Flag = 0x200;
+    private const short kPlayer3Flag = 0x400;
+    private const short kPlayer4Flag = 0x600;
 
     // The MonoBehaviour data is converted to ComponentData on the entity.
     // We are specifically transforming from a good editor representation of the data (Represented in degrees)
@@ -81,15 +85,15 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                     switch (homebase.Player)
                     {
                         case Players.Player2:
-                            bufferValue |= LbPlayer.kPlayer2Flag;
+                            bufferValue |= kPlayer2Flag;
                             break;
 
                         case Players.Player3:
-                            bufferValue |= LbPlayer.kPlayer3Flag;
+                            bufferValue |= kPlayer3Flag;
                             break;
 
                         case Players.Player4:
-                            bufferValue |= LbPlayer.kPlayer4Flag;
+                            bufferValue |= kPlayer4Flag;
                             break;
                     }
 

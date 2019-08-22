@@ -1,29 +1,26 @@
-﻿using System;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 public struct LbDirectionMap : IBufferElementData
 {
-    // These implicit conversions are optional, but can help reduce typing.
     public static implicit operator short(LbDirectionMap e) { return e.Value; }
     public static implicit operator LbDirectionMap(short e) { return new LbDirectionMap { Value = e }; }
 
-   // Actual value each buffer element will store.
-    
-  //  North,   00   0,0,1
-  //  East,    01   1,0,0
-  //  South,   10   0,0,-1
-  //  West     11   -1,0,0
-    
-   //            North South West East |  1 bit change flag | New Dir
-  // NextDir //  [][]  [][]  [][] [][]          []            [][]
-   public short Value;
-}
+    // Direction    BitInfo     Float3
+    // North        0x00        0,0,1
+    // East         0x01        1,0,0
+    // South        0x10        0,0,-1
+    // West         0x11        -1,0,0
 
-public struct LbCatMap : IBufferElementData
-{
-    // These implicit conversions are optional, but can help reduce typing.
-    public static implicit operator int(LbCatMap e) { return e.Value; }
-    public static implicit operator LbCatMap(int e) { return new LbCatMap { Value = e }; }
+    // Player       BitInfo
+    // Player1      0x00
+    // Player2      0x01
+    // Player3      0x10
+    // Player4      0x11
 
-    public int Value;
+    // Byte distribution:
+    // |                First Byte                                  |            Second Byte        |
+    // [] [] [] []  | []                | [] []     | []            | [] [] | [] [] | [] [] | [] [] |
+    // Not used     | Home base Flag    | Player ID |  Hole Flag    | North | East  | South | West  |
+
+    public short Value;
 }
