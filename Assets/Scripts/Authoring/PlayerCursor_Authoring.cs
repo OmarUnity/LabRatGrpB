@@ -9,31 +9,22 @@ using UnityEngine.Serialization;
 [RequiresEntityConversion]
 public class PlayerCursor_Authoring : MonoBehaviour,IDeclareReferencedPrefabs, IConvertGameObjectToEntity
 {
-    public enum Player { One = 0, Two = 1, Three = 2, Four = 3 };
-    public GameObject PlayerPrefab;
-    public Player PlayerId = Player.One;
-    public float3 Position = float3.zero;
-    public bool isPlayer = true;
-    
-    // The MonoBehaviour data is converted to ComponentData on the entity.
-    // We are specifically transforming from a good editor representation of the data (Represented in degrees)
-    // To a good runtime representation (Represented in radians)
+    public Players PlayerId = Players.Player1;
+    public GameObject ArrowPrefab;
+
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        if (isPlayer)
-        {
-            dstManager.AddComponentData(entity, new LbPlayer {Value = (byte)PlayerId, PrefabArrow = conversionSystem.GetPrimaryEntity(PlayerPrefab)});
-            dstManager.AddComponentData(entity, new LbArrow());
-            dstManager.AddComponentData(entity, new LbMovementSpeed {Value = 1f});
-            dstManager.AddComponentData(entity, new LbArrowPosition {Value = Position});
-        }
-        else
-        {
-            dstManager.AddComponentData(entity, new LbBoard {SizeX = 10, SizeY = 10});
-        }
+        dstManager.AddComponentData(entity, new LbPlayer { Value = (byte)PlayerId });
+        dstManager.AddComponentData(entity, new LbCursor());
+        dstManager.AddComponentData(entity, new LbCursorInit());
+        dstManager.AddComponentData(entity, new LbCursorArrow { ArrowPrefab = conversionSystem.GetPrimaryEntity(ArrowPrefab) });
+        dstManager.AddComponentData(entity, new LbMovementTarget() { From = float3.zero, To = float3.zero });
+        dstManager.AddComponentData(entity, new LbDistanceToTarget() { Value = 0.0f });
+        dstManager.AddComponentData(entity, new LbMovementSpeed { Value = 0.5f });
     }
+
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
     {
-        referencedPrefabs.Add(PlayerPrefab);
+        referencedPrefabs.Add(ArrowPrefab);
     }
 }
