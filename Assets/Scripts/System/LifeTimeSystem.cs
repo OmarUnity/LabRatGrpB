@@ -50,7 +50,6 @@ public class LifeTimeSystem : JobComponentSystem
         }
     }
 
-    // OnUpdate runs on the main thread.
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
         var handle = new LifeTimeJob

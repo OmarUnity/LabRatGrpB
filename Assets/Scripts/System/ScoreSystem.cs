@@ -4,7 +4,7 @@ using Unity.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Update the game camera
+/// 
 /// </summary>
 [AlwaysUpdateSystem]
 public class ScoreSystem : ComponentSystem

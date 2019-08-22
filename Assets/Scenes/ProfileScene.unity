@@ -152,7 +152,7 @@ MonoBehaviour:
   _SceneAsset: {fileID: 102900000, guid: ed18ca29690ab3743b5766e284af5edb, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   AutoLoadScene: 1
-  m_SubSceneHeader: {fileID: 11400000, guid: 5fddedff37ada42438cf95f5166848cf, type: 2}
+  m_SubSceneHeader: {fileID: 11400000, guid: fbc2f8b9d1cb00841b667a7abc6de183, type: 2}
 --- !u!4 &182576397
 Transform:
   m_ObjectHideFlags: 0
@@ -284,7 +284,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1

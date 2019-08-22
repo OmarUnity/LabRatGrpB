@@ -8,6 +8,7 @@ using Unity.Burst;
 
 public class MovementSystem : JobComponentSystem
 {
+    [ExcludeComponent(typeof(LbFall))]
     [BurstCompile]
     public struct MovementJob : IJobForEach<Translation, LbMovementTarget, LbMovementSpeed, LbDistanceToTarget>
     {

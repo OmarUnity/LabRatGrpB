@@ -18,9 +18,9 @@ public struct LbDirectionMap : IBufferElementData
     // Player4      0x11
 
     // Byte distribution:
-    // |                First Byte                                  |            Second Byte        |
-    // [] [] [] []  | []                | [] []     | []            | [] [] | [] [] | [] [] | [] [] |
-    // Not used     | Home base Flag    | Player ID |  Hole Flag    | North | East  | South | West  |
+    // |                First Byte                                      |            Second Byte        |
+    // | [] [] [] []  | []                | [] []     | []              | [] [] | [] [] | [] [] | [] [] |
+    // | Not used     | Home base Flag    | Player ID |  Hole Flag      | North | East  | South | West  |
 
     public short Value;
 }

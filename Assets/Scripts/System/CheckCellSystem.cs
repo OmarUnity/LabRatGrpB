@@ -60,8 +60,6 @@ public class CheckCellSystem : JobComponentSystem
                 var cellMapValue = Buffer[index].Value;
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
                 {
-                    CommandBuffer.RemoveComponent<LbDirection>(chunkIndex, entity);
-
                     CommandBuffer.AddComponent(chunkIndex, entity, new LbFall());
                     if (areRats)
                         CommandBuffer.AddComponent(chunkIndex, entity, new LbLifetime() { Value = 1.0f });
