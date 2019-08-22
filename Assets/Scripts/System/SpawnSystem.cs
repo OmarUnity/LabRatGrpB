@@ -8,65 +8,86 @@ using Unity.Collections;
 
 public class SpawnSystem : JobComponentSystem
 {
-    enum InstanceType
-    {
-        Cat, Mouse
-    }
-    
     private EntityCommandBufferSystem m_CommandBufferSystem;
+    private EntityQuery m_Query;
+
     private Random m_Random = new Random(1);
-    
+
     protected override void OnCreate()
     {
+        m_Query = GetEntityQuery(typeof(LbSpawner), ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<Rotation>());
         m_CommandBufferSystem = World.GetOrCreateSystem<LbSimulationBarrier>();
     }
 
-    struct SpawnJob : IJobForEachWithEntity<LbSpawner, Translation, Rotation>
+    struct SpawnJobChunk : IJobChunk
     {
         public EntityCommandBuffer.Concurrent CommandBuffer;
         public float DeltaTime;
-        public int RandomNumber;
+        public int Seed;
 
-        public void Execute(Entity entity, int index, ref LbSpawner lbSpawner, [ReadOnly] ref Translation translation, [ReadOnly] ref Rotation rotation)
+        public ArchetypeChunkComponentType<LbSpawner> SpawnerType;
+        [ReadOnly] public ArchetypeChunkComponentType<Translation> TranslationType;
+        [ReadOnly] public ArchetypeChunkComponentType<Rotation> RotationType;
+
+        public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
-            var location = translation.Value;
+            uint newSeed = (uint)(Seed + chunkIndex);
+            Random chunkRandom = new Random(newSeed);
 
-            lbSpawner.ElapsedTimeForMice += DeltaTime;
-            lbSpawner.ElapsedTimeForCats += DeltaTime;
+            var spawners = chunk.GetNativeArray(SpawnerType);
+            var translations = chunk.GetNativeArray(TranslationType);
+            var rotations = chunk.GetNativeArray(RotationType);
 
-            if (lbSpawner.ElapsedTimeForMice > lbSpawner.MouseFrequency)
+            for (var i=0; i<chunk.Count; ++i)
             {
-                lbSpawner.ElapsedTimeForMice = 0;
-                DoSpawn(index, location, ref rotation, ref lbSpawner.MousePrefab, 4.0f, InstanceType.Mouse);
-            }
-            
-            if (lbSpawner.ElapsedTimeForCats > lbSpawner.CatFrequency)
-            {
-                lbSpawner.ElapsedTimeForCats = 0;
-                DoSpawn(index, location, ref rotation, ref lbSpawner.CatPrefab, 1.0f, InstanceType.Cat);
+                var spawner = spawners[i];
+
+                var location = translations[i].Value;
+                var rotation = rotations[i].Value;
+
+                spawner.ElapsedTimeForMice += DeltaTime;
+                spawner.ElapsedTimeForCats += DeltaTime;
+
+                if (spawner.ElapsedTimeForMice > spawner.MouseFrequency)
+                {
+                    spawner.ElapsedTimeForMice = 0;
+
+                    var randomDirection = chunkRandom.NextInt(0, 4);
+                    DoSpawn(chunkIndex, location, rotation, ref spawner.MousePrefab, randomDirection, 4.0f, false);
+                }
+
+                if (spawner.ElapsedTimeForCats > spawner.CatFrequency)
+                {
+                    spawner.ElapsedTimeForCats = 0;
+
+                    var randomDirection = chunkRandom.NextInt(0, 4);
+                    DoSpawn(chunkIndex, location, rotation, ref spawner.CatPrefab, randomDirection, 1.0f, true);
+                }
+
+                spawners[i] = spawner;
             }
         }
 
-        private void DoSpawn(int index, float3 translation, ref Rotation rotation, ref Entity entityType, float speed, InstanceType instanceType)
+        private void DoSpawn(int index, float3 translation, quaternion rotation, ref Entity entityType, int direction, float speed, bool isCat)
         {
             var instance = CommandBuffer.Instantiate(index, entityType);
 
-            CommandBuffer.SetComponent(index, instance, new Translation{ Value = translation });
-            CommandBuffer.SetComponent(index, instance, new Rotation{ Value = rotation.Value });
+            CommandBuffer.SetComponent(index, instance, new Translation { Value = translation });
+            CommandBuffer.SetComponent(index, instance, new Rotation { Value = rotation });
 
             CommandBuffer.AddComponent<LbRotationSpeed>(index, instance);
             CommandBuffer.AddComponent(index, instance, new LbMovementSpeed { Value = speed });
             CommandBuffer.AddComponent(index, instance, new LbMovementTarget() { From = translation, To = translation });
             CommandBuffer.AddComponent(index, instance, new LbDistanceToTarget { Value = 1.0f });
 
-            CommandBuffer.AddComponent(index, instance, new LbDirection() { Value = (byte)RandomNumber });
-                
-            if (instanceType == InstanceType.Cat)
+            CommandBuffer.AddComponent(index, instance, new LbDirection() { Value = (byte)direction });
+
+            if (isCat)
             {
                 CommandBuffer.AddComponent<LbCat>(index, instance);
-                CommandBuffer.AddComponent(index, instance, new LbLifetime() {Value = 30.0f });
+                CommandBuffer.AddComponent(index, instance, new LbLifetime() { Value = 30.0f });
             }
-            else if (instanceType == InstanceType.Mouse)
+            else
             {
                 CommandBuffer.AddComponent<LbRat>(index, instance);
             }
@@ -75,12 +96,17 @@ public class SpawnSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var jobHandle = new SpawnJob
+        var jobHandle = new SpawnJobChunk
         {
             DeltaTime = Time.deltaTime,
             CommandBuffer = m_CommandBufferSystem.CreateCommandBuffer().ToConcurrent(),
-            RandomNumber = m_Random.NextInt(0, 4)
-        }.Schedule(this, inputDeps);
+            Seed = m_Random.NextInt(),
+
+            SpawnerType = GetArchetypeChunkComponentType<LbSpawner>(),
+            TranslationType = GetArchetypeChunkComponentType<Translation>(),
+            RotationType = GetArchetypeChunkComponentType<Rotation>(),
+
+        }.Schedule(m_Query, inputDeps);
 
         m_CommandBufferSystem.AddJobHandleForProducer(jobHandle);
 
