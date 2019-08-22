@@ -38,7 +38,7 @@ public class PlayerCursorSystem : JobComponentSystem
         public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
         {
             var random = new Unity.Mathematics.Random();
-            random.InitState((uint)(Seed + chunkIndex * 1000));
+            random.InitState((uint)(Seed + chunkIndex * 10000));
 
             var movements = chunk.GetNativeArray(MovementType);
             var distances = chunk.GetNativeArray(DistanceType);
