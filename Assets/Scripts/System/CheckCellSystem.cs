@@ -15,7 +15,21 @@ public class CheckCellSystem : JobComponentSystem
 
     protected override void OnCreate()
     {
-        m_ReachQuery = GetEntityQuery(ComponentType.ReadOnly<Translation>(), typeof(LbDirection), typeof(LbMovementTarget));
+        var desc = new EntityQueryDesc()
+        {
+            None = new ComponentType[] 
+            {
+                typeof(LbFall),
+                typeof(LbCursor)
+            },
+            All = new ComponentType[] 
+            {
+                ComponentType.ReadOnly<Translation>(),
+                typeof(LbDirection),
+                typeof(LbMovementTarget)
+            }
+        };
+        m_ReachQuery = GetEntityQuery(desc);
         m_BoardQuery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>(), ComponentType.ReadOnly<LbDirectionMap>());
 
         m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
