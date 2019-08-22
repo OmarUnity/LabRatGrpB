@@ -33,20 +33,29 @@ public class ArrowPositionSystem : JobComponentSystem
         _random.InitState();
     }
 
-    struct MovePlayerCursorJob : IJobForEachWithEntity<LbArrowPosition,LbPlayer>
+    struct SpawnArrow : IJobForEachWithEntity<LbArrowPosition,LbPlayer,LbArrow>
     {
         public int Seed;
         public int Size;
-        
+        public int RandomNumber;
         public EntityCommandBuffer.Concurrent CommandBuffer;
 
-        public void Execute(Entity entity, int index, ref LbArrowPosition arrowPosition,[ReadOnly] ref LbPlayer player)
+        public void Execute(Entity entity, int index, ref LbArrowPosition arrowPosition,[ReadOnly] ref LbPlayer player,[ReadOnly] ref LbArrow lbArrow)
         {
             var random = new Random((uint) ( Seed+index ));
             var position = new float3(random.NextInt(0, Size), 1, random.NextInt(0, Size));
-            arrowPosition.Value = position;
             
+            
+            
+            
+            var instance = CommandBuffer.Instantiate(index,player.PrefabArrow);
+            CommandBuffer.AddComponent(index,instance,new LbLifetime { Value = 10f});
+           
+            CommandBuffer.SetComponent(index, instance, new Translation{Value = new float3(arrowPosition.Value.x,0.6f,arrowPosition.Value.z)});
+            arrowPosition.Value = position;
             CommandBuffer.SetComponent(index,entity,arrowPosition);
+//               
+            CommandBuffer.SetComponent(index, instance, new Rotation{Value = quaternion.EulerXYZ(math.radians(90),math.radians(90*RandomNumber),math.radians(0))});
             CommandBuffer.RemoveComponent<LbArrow>(index,entity);
         }
     }
@@ -57,10 +66,11 @@ public class ArrowPositionSystem : JobComponentSystem
 
         var sRand = new System.Random();
         
-        var job = new MovePlayerCursorJob
+        var job = new SpawnArrow
         {
             Seed = sRand.Next(int.MaxValue),
             Size = board.SizeY,
+            RandomNumber = _random.NextInt(0, 4),
             CommandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent()
         }.Schedule(m_PlayerQuery, inputDependencies);
         

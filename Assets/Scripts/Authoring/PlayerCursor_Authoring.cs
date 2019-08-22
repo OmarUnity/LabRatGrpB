@@ -2,13 +2,15 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.Serialization;
 
 // ReSharper disable once InconsistentNaming
 [RequiresEntityConversion]
-public class PlayerCursor_Authoring : MonoBehaviour, IConvertGameObjectToEntity
+public class PlayerCursor_Authoring : MonoBehaviour,IDeclareReferencedPrefabs, IConvertGameObjectToEntity
 {
-    public enum Player { One, Two, Three, Four };
+    public enum Player { One = 0, Two = 1, Three = 2, Four = 3 };
+    public GameObject PlayerPrefab;
     public Player PlayerId = Player.One;
     public float3 Position = float3.zero;
     public bool isPlayer = true;
@@ -20,14 +22,7 @@ public class PlayerCursor_Authoring : MonoBehaviour, IConvertGameObjectToEntity
     {
         if (isPlayer)
         {
-            if (PlayerId == Player.One)
-                dstManager.AddComponentData(entity, new LbPlayer {Value = 0});
-            if (PlayerId == Player.Two)
-                dstManager.AddComponentData(entity, new LbPlayer {Value = 1});
-            if (PlayerId == Player.Three)
-                dstManager.AddComponentData(entity, new LbPlayer {Value = 2});
-            if (PlayerId == Player.Four)
-                dstManager.AddComponentData(entity, new LbPlayer {Value = 3});
+            dstManager.AddComponentData(entity, new LbPlayer {Value = (byte)PlayerId, PrefabArrow = conversionSystem.GetPrimaryEntity(PlayerPrefab)});
             dstManager.AddComponentData(entity, new LbArrow());
             dstManager.AddComponentData(entity, new LbMovementSpeed {Value = 1f});
             dstManager.AddComponentData(entity, new LbArrowPosition {Value = Position});
@@ -36,5 +31,9 @@ public class PlayerCursor_Authoring : MonoBehaviour, IConvertGameObjectToEntity
         {
             dstManager.AddComponentData(entity, new LbBoard {SizeX = 10, SizeY = 10});
         }
+    }
+    public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
+    {
+        referencedPrefabs.Add(PlayerPrefab);
     }
 }

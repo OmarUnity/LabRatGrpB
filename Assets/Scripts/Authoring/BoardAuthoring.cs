@@ -103,6 +103,10 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 dirMapbuffer.Add(bufferValue);
             }
         }
+        var arrowDirbuffer = dstManager.AddBuffer<LbArrowDirectionMap>(entity);
+        
+        for (int i = 0; i < Size.y*Size.x; ++i)
+            arrowDirbuffer.Add(new LbArrowDirectionMap());
 
         var catMapbuffer = dstManager.AddBuffer<LbCatMap>(entity);
 

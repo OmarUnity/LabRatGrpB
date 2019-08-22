@@ -8,5 +8,6 @@ using System;
 public struct LbPlayer : IComponentData
 {
     public byte Value;
+    public Entity PrefabArrow;
 }
 

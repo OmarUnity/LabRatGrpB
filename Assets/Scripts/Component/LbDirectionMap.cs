@@ -24,3 +24,14 @@ public struct LbDirectionMap : IBufferElementData
 
     public short Value;
 }
+
+//            Flag |Player | Dir |
+//  [] [] []    []   [][]   [][]
+public struct LbArrowDirectionMap : IBufferElementData
+{
+    // These implicit conversions are optional, but can help reduce typing.
+    public static implicit operator byte(LbArrowDirectionMap e) { return e.Value; }
+    public static implicit operator LbArrowDirectionMap(byte e) { return new LbArrowDirectionMap { Value = e }; }
+
+    public byte Value;
+}

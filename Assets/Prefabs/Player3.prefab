@@ -119,6 +119,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbc5e635034c4903b41b9e4fa25e45a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PlayerPrefab: {fileID: 999181331314891469, guid: 1ef7dab967f004454ad12485aaeb5457,
+    type: 3}
   PlayerId: 2
   Position:
     x: 5
