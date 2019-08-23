@@ -197,6 +197,8 @@ public class BoardGenerationSystem : JobComponentSystem
                 for (int x = 0; x < Generator.SizeX; ++x)
                 {
                     var cellEntity = CommandBuffer.Instantiate(Generator.CellPrefab);
+                    CommandBuffer.AddComponent(cellEntity, new LbMap());
+
                     FloorMap.TryAdd(new int2(x,y), cellEntity);
 
                     var randomHeight = random.NextFloat(0.0f, 1.0f) * Generator.YNoise;
@@ -393,7 +395,7 @@ public class BoardGenerationSystem : JobComponentSystem
         }
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     struct DirectionMapJob : IJobParallelFor
     {
         [ReadOnly] public LbBoardGenerator Generator;
@@ -413,7 +415,6 @@ public class BoardGenerationSystem : JobComponentSystem
                 var index = offset + i;
                 var coord = new int2(i, jobIndex);
 
-                // 0x1111 = 15
                 var bitIndex = 0x0;
                 if (HasWall(WallMap, coord, Directions.North))
                     bitIndex |= 0x1;
@@ -465,6 +466,8 @@ public class BoardGenerationSystem : JobComponentSystem
         public void Execute()
         {
             var entity = CommandBuffer.CreateEntity();
+            CommandBuffer.AddComponent(entity, new LbMap());
+
             var board = new LbBoard()
             {
                 SizeX = Generator.SizeX,
@@ -568,6 +571,7 @@ public class BoardGenerationSystem : JobComponentSystem
             0.0f,                   // Change when we have a height variable
             coord.y);
 
+        buffer.AddComponent(entity, new LbMap());
         buffer.SetComponent(entity, new Translation() { Value = center });
 
         return entity;
@@ -611,6 +615,8 @@ public class BoardGenerationSystem : JobComponentSystem
         {
             buffer.SetComponent(entity, new Rotation() { Value = quaternion.EulerXYZ(0.0f, math.PI, 0.0f) });
         }
+
+        buffer.AddComponent(entity, new LbMap());
 
         return entity;
     }
