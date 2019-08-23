@@ -107,6 +107,9 @@ public class CollisionSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
+        if (m_BoardQuery.CalculateEntityCount() <= 0)
+            return inputDeps;
+
         var boardEntity = m_BoardQuery.GetSingletonEntity();
         var board = m_BoardQuery.GetSingleton<LbBoard>();
         var bufferLookup = GetBufferFromEntity<LbCatMap>();

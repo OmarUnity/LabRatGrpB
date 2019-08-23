@@ -3,6 +3,7 @@ using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Collections;
 
+[UpdateBefore(typeof(BoardSpawnerSystem))]
 public class CheckCellSystem : JobComponentSystem
 {
     private const short kHoleFlag = 0x100;

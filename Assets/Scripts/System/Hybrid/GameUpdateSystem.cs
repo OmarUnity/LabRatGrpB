@@ -12,18 +12,27 @@ public class GameUpdateSystem : ComponentSystem
 {
     GameTimer m_Timer;
     GameWinner m_Winner;
-    EntityQuery m_Query;
 
-    EntityQuery m_SpawnersQuery;
-    EntityQuery m_MovementQuery;
+    EntityQuery m_Query;
     EntityQuery m_PlayerQuery;
 
+    EntityQuery m_DestoryQuery;
+    
     protected override void OnCreate()
     {
         m_Query = GetEntityQuery(typeof(LbGameTimer));
 
-        m_MovementQuery = GetEntityQuery(typeof(LbMovementTarget));
-        m_SpawnersQuery = GetEntityQuery(typeof(LbSpawner));
+        var desc = new EntityQueryDesc()
+        {
+            Any = new ComponentType[] 
+            {
+                typeof(LbMovementTarget),
+                typeof(LbArrow),
+                typeof(LbSpawner),
+                typeof(LbCursor),
+            }
+        };
+        m_DestoryQuery = GetEntityQuery(desc);
 
         m_PlayerQuery = GetEntityQuery(typeof(LbPlayer), typeof(LbPlayerScore));
     }
@@ -70,8 +79,7 @@ public class GameUpdateSystem : ComponentSystem
         {
             m_Timer.SetTime(0.0f);
             EntityManager.DestroyEntity(m_Query);
-            EntityManager.DestroyEntity(m_MovementQuery);
-            EntityManager.DestroyEntity(m_SpawnersQuery);
+            EntityManager.DestroyEntity(m_DestoryQuery);
 
             var entity = EntityManager.CreateEntity();
             EntityManager.AddComponentData(entity, new LbGameRestarter() { Value = LbConstants.EndTime });
