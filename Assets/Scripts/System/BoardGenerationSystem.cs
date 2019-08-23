@@ -156,7 +156,7 @@ public class BoardGenerationSystem : JobComponentSystem
 
             DirectionMap = m_DirectionMap.AsParallelWriter(),
 
-        }.Schedule(generator.SizeY, 32, JobHandle.CombineDependencies(holeJobHandle, wallJobHandle));
+        }.Schedule(generator.SizeY, 1, JobHandle.CombineDependencies(holeJobHandle, wallJobHandle));
 
         var boardJob = new BoardBuilderJob()
         {
