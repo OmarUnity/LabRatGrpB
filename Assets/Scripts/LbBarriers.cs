@@ -1,6 +1,9 @@
 ﻿using Unity.Entities;
 
 
+[UpdateBefore(typeof(LbSimulationBarrier))]
+[UpdateBefore(typeof(LbCheckBarrier))]
+public class LbCreationBarrier : EntityCommandBufferSystem { }
 
 public class LbSimulationBarrier : EntityCommandBufferSystem { }
 
