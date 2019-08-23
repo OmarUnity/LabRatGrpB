@@ -18,3 +18,11 @@ public struct LbGameWaitForSpawn : IComponentData
 public struct LbGameSpawnAll : IComponentData
 {
 }
+
+/// <summary>
+/// Gameplay timer
+/// </summary>
+public struct LbGameTimer : IComponentData
+{
+    public float Value;
+}

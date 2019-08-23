@@ -117,6 +117,9 @@ public class BoardSpawnerSystem : JobComponentSystem
                 PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, coord);
                 remaining--;
             }
+
+            var entity = CommandBuffer.CreateEntity();
+            CommandBuffer.AddComponent(entity, new LbGameTimer() { Value = 90.0f });
         }
     }
 
