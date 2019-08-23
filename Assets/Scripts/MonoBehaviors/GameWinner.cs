@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameWinner : MonoBehaviour
 {
-    public void ShowWinners(List<Players> winners)
+    public void ShowWinners(List<Players> winners, float time)
     {
 
     }
