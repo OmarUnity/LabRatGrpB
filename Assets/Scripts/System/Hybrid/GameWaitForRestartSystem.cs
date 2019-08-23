@@ -8,8 +8,6 @@ using UnityEngine;
 [UpdateAfter(typeof(DestroySystem))]
 public class GameWaitForRestartSystem : ComponentSystem
 {
-    GameIntro m_UIIntro;
-
     EntityQuery m_Query;
     EntityQuery m_MapQuery;
 
