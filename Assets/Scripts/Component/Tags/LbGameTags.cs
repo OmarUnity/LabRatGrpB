@@ -26,3 +26,11 @@ public struct LbGameTimer : IComponentData
 {
     public float Value;
 }
+
+/// <summary>
+/// Timer to restart the game
+/// </summary>
+public struct LbGameRestarter : IComponentData
+{
+    public float Value;
+}
