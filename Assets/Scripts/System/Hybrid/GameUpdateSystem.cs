@@ -8,6 +8,7 @@ using System.Collections.Generic;
 /// Update the game camera
 /// </summary>
 [UpdateAfter(typeof(DestroySystem))]
+[UpdateAfter(typeof(LbCheckBarrier))]
 public class GameUpdateSystem : ComponentSystem
 {
     GameTimer m_Timer;

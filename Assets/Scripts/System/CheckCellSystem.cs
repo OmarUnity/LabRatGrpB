@@ -2,8 +2,8 @@
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Collections;
+using Unity.Mathematics;
 
-[UpdateBefore(typeof(BoardSpawnerSystem))]
 public class CheckCellSystem : JobComponentSystem
 {
     private const short kHoleFlag = 0x100;
@@ -38,7 +38,7 @@ public class CheckCellSystem : JobComponentSystem
 
     struct CheckCellNewJob : IJobChunk
     {
-        [ReadOnly] public int Size;
+        [ReadOnly] public int2 BoardSize;
         [ReadOnly] public NativeArray<LbDirectionMap> Buffer;
 
         [ReadOnly] public ArchetypeChunkEntityType EntityType;
@@ -70,7 +70,9 @@ public class CheckCellSystem : JobComponentSystem
                 if (distance < 1.0f)
                     continue;
 
-                var index = ((int)translation.z) * Size + (int)translation.x;
+                var index = ((int)translation.z) * BoardSize.y + (int)translation.x;
+                if (index >= Buffer.Length)
+                    continue;
 
                 var cellMapValue = Buffer[index].Value;
                 if ((cellMapValue & kHoleFlag) == kHoleFlag)
@@ -128,7 +130,7 @@ public class CheckCellSystem : JobComponentSystem
         
         var job = new CheckCellNewJob
         {
-            Size = board.SizeY,
+            BoardSize = new int2(board.SizeX, board.SizeY),
             Buffer = bufferArray,
             
             EntityType = entityType,
