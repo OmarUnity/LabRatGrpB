@@ -119,7 +119,7 @@ public class BoardSpawnerSystem : JobComponentSystem
             }
 
             var entity = CommandBuffer.CreateEntity();
-            CommandBuffer.AddComponent(entity, new LbGameTimer() { Value = 90.0f });
+            CommandBuffer.AddComponent(entity, new LbGameTimer() { Value = LbConstants.GameTime });
         }
     }
 

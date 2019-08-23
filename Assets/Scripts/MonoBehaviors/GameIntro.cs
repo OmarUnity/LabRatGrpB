@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameIntro : MonoBehaviour
 {
-    public void Play()
+    public void Play(float time)
     {
         
     }

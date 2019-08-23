@@ -27,10 +27,10 @@ public class GameStartSystem : ComponentSystem
                 return;
         }
 
-        m_UIIntro.Play();
+        m_UIIntro.Play(LbConstants.IntroTime);
         EntityManager.DestroyEntity(m_Query);
 
         var entity = EntityManager.CreateEntity();
-        EntityManager.AddComponentData(entity, new LbGameWaitForSpawn() { Value = 3.0f });
+        EntityManager.AddComponentData(entity, new LbGameWaitForSpawn() { Value = LbConstants.IntroTime });
     }
 }

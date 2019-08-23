@@ -73,13 +73,11 @@ public class GameUpdateSystem : ComponentSystem
             EntityManager.DestroyEntity(m_MovementQuery);
             EntityManager.DestroyEntity(m_SpawnersQuery);
 
-            var resetTime = 20.0f;
-
             var entity = EntityManager.CreateEntity();
-            EntityManager.AddComponentData(entity, new LbGameRestarter() { Value = resetTime });
+            EntityManager.AddComponentData(entity, new LbGameRestarter() { Value = LbConstants.EndTime });
 
             var winners = GetBestPlayerAndCleanUp();
-            m_Winner.ShowWinners(winners, resetTime);
+            m_Winner.ShowWinners(winners, LbConstants.EndTime);
         }
     }
 

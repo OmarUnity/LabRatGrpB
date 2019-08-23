@@ -108,6 +108,9 @@ public class CheckCellSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
+        if (m_BoardQuery.CalculateEntityCount() <= 0)
+            return inputDeps;
+
         var board = m_BoardQuery.GetSingleton<LbBoard>();
         var boardEntity = m_BoardQuery.GetSingletonEntity();
         var bufferLookup = GetBufferFromEntity<LbDirectionMap>();
