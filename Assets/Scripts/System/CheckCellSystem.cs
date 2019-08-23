@@ -71,7 +71,7 @@ public class CheckCellSystem : JobComponentSystem
                     continue;
 
                 var index = ((int)translation.z) * BoardSize.y + (int)translation.x;
-                if (index >= Buffer.Length)
+                if (index < 0 || index >= Buffer.Length)
                     continue;
 
                 var cellMapValue = Buffer[index].Value;
