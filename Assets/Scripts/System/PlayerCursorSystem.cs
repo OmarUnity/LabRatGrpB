@@ -68,6 +68,7 @@ public class PlayerCursorSystem : JobComponentSystem
                     Direction = (byte)random.NextInt(0, 4),
                     Location = movement.From
                 });
+                CommandBuffer.AddComponent(chunkIndex, entity, new LbArrow());
             }
         }
     }
