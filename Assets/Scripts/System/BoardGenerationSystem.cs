@@ -496,6 +496,9 @@ public class BoardGenerationSystem : JobComponentSystem
         public void Execute(Entity entity, int index, ref LbBoardGenerator generator)
         {
             CommandBuffer.AddComponent(index, entity, new LbDisabled());
+
+            var startEntity = CommandBuffer.CreateEntity(index);
+            CommandBuffer.AddComponent(index, startEntity, new LbGameStart());
         }
     }
 

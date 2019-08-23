@@ -1,0 +1,20 @@
+﻿using Unity.Entities;
+
+/// <summary>
+/// Used to show the intro cinematic
+/// </summary>
+public struct LbGameStart : IComponentData
+{
+}
+
+/// <summary>
+/// Wait for spawning all dynamic entities (cat/rat spawners and player curosrs)
+/// </summary>
+public struct LbGameWaitForSpawn : IComponentData
+{
+    public float Value;
+}
+
+public struct LbGameSpawnAll : IComponentData
+{
+}
