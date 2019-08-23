@@ -86,6 +86,11 @@ public class BoardSpawnerSystem : JobComponentSystem
 
         public void Execute()
         {
+            PlaceSpawner(ref CommandBuffer, Generator.Player1Cursor, int2.zero);
+            PlaceSpawner(ref CommandBuffer, Generator.Player2Cursor, int2.zero);
+            PlaceSpawner(ref CommandBuffer, Generator.Player3Cursor, int2.zero);
+            PlaceSpawner(ref CommandBuffer, Generator.Player4Cursor, int2.zero);
+
             PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(0, 0));
             PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(Generator.SizeX-1, 0));
             PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(0, Generator.SizeY - 1));

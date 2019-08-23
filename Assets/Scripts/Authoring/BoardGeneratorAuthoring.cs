@@ -13,6 +13,7 @@ public class BoardGeneratorAuthoring : MonoBehaviour, IDeclareReferencedPrefabs,
 
     public GameObject CellPrefab;
     public GameObject WallPrefab;
+
     public GameObject Player1HombasePrefab;
     public GameObject Player2HombasePrefab;
     public GameObject Player3HombasePrefab;
@@ -20,6 +21,11 @@ public class BoardGeneratorAuthoring : MonoBehaviour, IDeclareReferencedPrefabs,
 
     public GameObject SpawnerPrefab;
     public int AdditinalSpawners;
+
+    public GameObject Player1CursorPrefab;
+    public GameObject Player2CursorPrefab;
+    public GameObject Player3CursorPrefab;
+    public GameObject Player4CursorPrefab;
 
     // The MonoBehaviour data is converted to ComponentData on the entity.
     // We are specifically transforming from a good editor representation of the data (Represented in degrees)
@@ -42,6 +48,11 @@ public class BoardGeneratorAuthoring : MonoBehaviour, IDeclareReferencedPrefabs,
 
             SpawnerPrefab = conversionSystem.GetPrimaryEntity(SpawnerPrefab),
             AdditionalSpawners = AdditinalSpawners,
+
+            Player1Cursor = conversionSystem.GetPrimaryEntity(Player1CursorPrefab),
+            Player2Cursor = conversionSystem.GetPrimaryEntity(Player2CursorPrefab),
+            Player3Cursor = conversionSystem.GetPrimaryEntity(Player3CursorPrefab),
+            Player4Cursor = conversionSystem.GetPrimaryEntity(Player4CursorPrefab),
         };
         dstManager.AddComponentData(entity, generator);
     }
@@ -55,5 +66,9 @@ public class BoardGeneratorAuthoring : MonoBehaviour, IDeclareReferencedPrefabs,
         referencedPrefabs.Add(Player3HombasePrefab);
         referencedPrefabs.Add(Player4HombasePrefab);
         referencedPrefabs.Add(SpawnerPrefab);
+        referencedPrefabs.Add(Player1CursorPrefab);
+        referencedPrefabs.Add(Player2CursorPrefab);
+        referencedPrefabs.Add(Player3CursorPrefab);
+        referencedPrefabs.Add(Player4CursorPrefab);
     }
 }

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5246932715662418314}
   - component: {fileID: 371233419743617878}
+  - component: {fileID: 1628916182}
   m_Layer: 0
   m_Name: BoardGenerator
   m_TagString: Untagged
@@ -45,8 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Size: {x: 90, y: 90}
   YNoise: 0.05
-  Seed: -1
-  AdditinalSpawners: 10
   CellPrefab: {fileID: 954994889461617875, guid: 69a03e0928a75db4c81d977ea4ef4667,
     type: 3}
   WallPrefab: {fileID: 8759650699859640773, guid: f6bed4374995da24d9eb2e1ad780eee8,
@@ -61,3 +60,25 @@ MonoBehaviour:
     type: 3}
   SpawnerPrefab: {fileID: 3558524365388033599, guid: ee432d626de424aa9a07753f3971652c,
     type: 3}
+  AdditinalSpawners: 10
+  Player1CursorPrefab: {fileID: 7493021013365710350, guid: 9500532dcf3de4a64b0e723423347cb4,
+    type: 3}
+  Player2CursorPrefab: {fileID: 5967019461391338085, guid: da07684793b2b493097fb94086ad9f6a,
+    type: 3}
+  Player3CursorPrefab: {fileID: 7383116688697523737, guid: 7c55f33b80c9a4a8688b503a545ba29c,
+    type: 3}
+  Player4CursorPrefab: {fileID: 5784097257961213530, guid: 029668cca1d3d4060a81d6d78ff89ea0,
+    type: 3}
+--- !u!114 &1628916182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3051556075110207494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea7d7495833204790ba1d3a8755397f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ConversionMode: 0
