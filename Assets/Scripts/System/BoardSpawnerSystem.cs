@@ -68,7 +68,7 @@ public class BoardSpawnerSystem : JobComponentSystem
 
         public void Execute(Entity entity, int index,[ReadOnly] ref LbGameSpawnAll c0)
         {
-            CommandBuffer.AddComponent(index, entity, new LbDestroy());
+            CommandBuffer.DestroyEntity(index, entity);
         }
     }
 

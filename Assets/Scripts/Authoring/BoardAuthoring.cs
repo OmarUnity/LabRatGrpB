@@ -60,20 +60,17 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
                 var cellLocation = new Vector2Int(x, y);
                 var cell = cells[cellLocation];
 
-                var hasWallArray = new[]
-                {
-                    HasWall(walls, cellLocation, Directions.North),
-                    HasWall(walls, cellLocation, Directions.South),
-                    HasWall(walls, cellLocation, Directions.West),
-                    HasWall(walls, cellLocation, Directions.East)
-                };
+                var bitIndex = 0x0;
+                if (HasWall(walls, cellLocation, Directions.North))
+                    bitIndex |= 0x8;
+                if (HasWall(walls, cellLocation, Directions.South))
+                    bitIndex |= 0x4;
+                if (HasWall(walls, cellLocation, Directions.West))
+                    bitIndex |= 0x2;
+                if (HasWall(walls, cellLocation, Directions.East))
+                    bitIndex |= 0x1;
 
-                var bitArrayWalls = new BitArray(hasWallArray);
-
-                var bytesWalls = new byte[1];
-                bitArrayWalls.CopyTo(bytesWalls, 0);
-
-                short bufferValue = (short)m_DirList[bytesWalls[0]];
+                short bufferValue = m_DirList[bitIndex];
                 if (cell.isHole)
                 {
                     bufferValue |= kHoleFlag;

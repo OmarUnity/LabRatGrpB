@@ -36,8 +36,8 @@ public class BoardGenerationSystem : JobComponentSystem
     private const short kPlayer3Flag = 0x400;
     private const short kPlayer4Flag = 0x600;
 
-    const byte kVertialFlag     = 0x01;
-    const byte kHorizonalFlag   = 0x11;
+    const byte kVertialFlag     = 0x1;
+    const byte kHorizonalFlag   = 0x2;
 
     private NativeHashMap<int2, Entity> m_FloorMap;
     private NativeHashMap<int2, byte> m_WallMap;
@@ -393,7 +393,7 @@ public class BoardGenerationSystem : JobComponentSystem
         }
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     struct DirectionMapJob : IJobParallelFor
     {
         [ReadOnly] public LbBoardGenerator Generator;
@@ -413,17 +413,19 @@ public class BoardGenerationSystem : JobComponentSystem
                 var index = offset + i;
                 var coord = new int2(i, jobIndex);
 
+                // 0x1111 = 15
                 var bitIndex = 0x0;
                 if (HasWall(WallMap, coord, Directions.North))
-                    bitIndex |= 0x8;
-                if (HasWall(WallMap, coord, Directions.South))
-                    bitIndex |= 0x4;
-                if (HasWall(WallMap, coord, Directions.West))
-                    bitIndex |= 0x2;
-                if (HasWall(WallMap, coord, Directions.East))
                     bitIndex |= 0x1;
+                if (HasWall(WallMap, coord, Directions.South))
+                    bitIndex |= 0x2;
+                if (HasWall(WallMap, coord, Directions.West))
+                    bitIndex |= 0x4;
+                if (HasWall(WallMap, coord, Directions.East))
+                    bitIndex |= 0x8;
 
                 short bufferValue = DirList[bitIndex];
+
                 if (!FloorMap.ContainsKey(coord))
                     bufferValue |= kHoleFlag;
 
