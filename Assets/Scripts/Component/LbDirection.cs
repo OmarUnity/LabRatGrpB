@@ -27,6 +27,26 @@ public struct LbDirection : IComponentData
         }
     }
 
+    public static quaternion GetRotation(byte directionByte)
+    {
+        if (directionByte == 0x0)
+        {
+            return quaternion.EulerXYZ(math.radians(270),math.radians(90),math.radians(0));
+        }
+        else if (directionByte == 0x1)
+        {
+            return quaternion.EulerXYZ(math.radians(270),math.radians(180),math.radians(0));
+        }
+        else if (directionByte == 0x2)
+        {
+            return quaternion.EulerXYZ(math.radians(270),math.radians(270),math.radians(0));
+        }
+        else
+        {
+            return quaternion.EulerXYZ(math.radians(270),math.radians(0),math.radians(0));
+        }
+    }
+
     public static int GetByteShift(byte direction)
     {
         switch (direction)

@@ -108,6 +108,7 @@ public class CheckCellSystem : JobComponentSystem
                     directions[i] = new LbDirection() { Value = (byte)nextDirectionByte };
                     targets[i] = new LbMovementTarget() { From = translation, To = translation + LbDirection.GetDirection((byte)nextDirectionByte)};
                     distanceTargets[i] = new LbDistanceToTarget() { Value = 0.0f };
+                    CommandBuffer.SetComponent(chunkIndex, entity, new Rotation() { Value = LbDirection.GetRotation((byte)nextDirectionByte) });
                 }
             }
         }
