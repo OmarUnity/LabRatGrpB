@@ -12,14 +12,18 @@ using Random = Unity.Mathematics.Random;
 public class ArrowManagerSystem : JobComponentSystem
 {
     private EntityQuery m_ArrowSpawerQuery;
-    //private EntityQuery m_BoardQuery;
+    private EntityQuery m_BoardQuery;
+    private EntityQuery m_ArrowsQuery;
+    private EntityQuery m_ArrowsDestroyedQuery;
     EntityCommandBufferSystem m_EntityCommandBufferSystem;
         
     protected override void OnCreate()
     {
         m_EntityCommandBufferSystem = World.Active.GetOrCreateSystem<LbSimulationBarrier>();
-        m_ArrowSpawerQuery = GetEntityQuery(typeof(LbArrowSpawner),typeof(LbArrow));
-       // m_BoardQuery = GetEntityQuery(typeof(LbBoard), typeof(LbArrowDirectionMap));
+        m_ArrowSpawerQuery = GetEntityQuery(typeof(LbArrowSpawner));
+        m_BoardQuery = GetEntityQuery(typeof(LbBoard), typeof(LbArrowDirectionMap));
+        m_ArrowsQuery = GetEntityQuery(typeof(LbArrow));
+        m_ArrowsDestroyedQuery = GetEntityQuery(typeof(LbArrow),typeof(LbDestroy));
     }
 
     struct SpawnArrow : IJob
@@ -37,34 +41,102 @@ public class ArrowManagerSystem : JobComponentSystem
                 var instance = CommandBuffer.Instantiate(ArrowSpawners[i].Prefab);
                     
                 ArrowSpawners[i] = arrowSpawner;
-                CommandBuffer.AddComponent(instance, new LbArrow());
+                CommandBuffer.AddComponent(instance, new LbArrow {Location = new int2((int)ArrowSpawners[i].Location.x,(int)ArrowSpawners[i].Location.z),Direction = ArrowSpawners[i].Direction});
                 CommandBuffer.AddComponent( instance, new LbLifetime { Value = 10f});
                 CommandBuffer.SetComponent( instance, new Translation{Value = new float3(ArrowSpawners[i].Location.x,0.6f,ArrowSpawners[i].Location.z)});
                 CommandBuffer.SetComponent( instance, new Rotation{Value = quaternion.EulerXYZ(math.radians(90),math.radians(rotationDegrees),math.radians(0))});
-                CommandBuffer.RemoveComponent<LbArrow>(Entities[i]);
+                CommandBuffer.DestroyEntity(Entities[i]);
             }
         }
     }
 
-    struct CheckArrow : IJob
+    [BurstCompile]
+    struct DeleteDestroyedFromArroMap : IJob
     {
+        [DeallocateOnJobCompletion]public NativeArray<Entity> Entities;
+        public NativeArray<LbArrowDirectionMap> ArrowDirectionMap;
+        [DeallocateOnJobCompletion]public NativeArray<LbArrow> LbArrows;
+        public int Size;
         public void Execute()
         {
-            
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                var arrowMapIndex = (int)(LbArrows[i].Location.y * Size +
+                                          LbArrows[i].Location.x);
+                var currentWord = ArrowDirectionMap[arrowMapIndex].Value;
+                currentWord &= 0x0;
+                ArrowDirectionMap[arrowMapIndex] = new LbArrowDirectionMap(){ Value = currentWord};
+            }
+        }
+    }
+
+    [BurstCompile]
+    struct WriteArroMap : IJob
+    {
+        [DeallocateOnJobCompletion]public NativeArray<Entity> Entities;
+         public NativeArray<LbArrowDirectionMap> ArrowDirectionMap;
+        [DeallocateOnJobCompletion]public NativeArray<LbArrow> LbArrows;
+        public int Size;
+        
+        public void Execute()
+        {
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                var arrowMapIndex = (int)(LbArrows[i].Location.y * Size +
+                                          LbArrows[i].Location.x);
+                var currentWord = ArrowDirectionMap[arrowMapIndex].Value;
+                currentWord |= 0x10;
+                currentWord |= LbArrows[i].Direction;
+                ArrowDirectionMap[arrowMapIndex] = new LbArrowDirectionMap(){ Value = currentWord};
+            }
         }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var entities = m_ArrowSpawerQuery.ToEntityArray(Allocator.TempJob);
+        var board = m_BoardQuery.GetSingleton<LbBoard>();
+        var entitiesSpawners = m_ArrowSpawerQuery.ToEntityArray(Allocator.TempJob);
+        var entitiesArrows = m_ArrowsQuery.ToEntityArray(Allocator.TempJob);
+        var entitiesArrowsDestroyed = m_ArrowsDestroyedQuery.ToEntityArray(Allocator.TempJob);
+        var arrowsDestroyed = m_ArrowsDestroyedQuery.ToComponentDataArray<LbArrow>(Allocator.TempJob);
         var arrowSpawners = m_ArrowSpawerQuery.ToComponentDataArray<LbArrowSpawner>(Allocator.TempJob);
+        var boardEntity = m_BoardQuery.GetSingletonEntity();
+        var arrowsQuery = m_ArrowsQuery.ToComponentDataArray<LbArrow>(Allocator.TempJob);
+        var bufferLookup = GetBufferFromEntity<LbArrowDirectionMap>();
+        var buffer = bufferLookup[boardEntity];
+        var bufferArray = buffer.AsNativeArray();
+        var commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
         
-        var handle = new SpawnArrow
+        var handle = new MemsetNativeArray<LbArrowDirectionMap>()
         {
-            Entities = entities,
+            Source = bufferArray,
+            Value = new LbArrowDirectionMap()
+        }.Schedule(bufferArray.Length, bufferArray.Length, inputDeps);
+        
+        
+         handle = new SpawnArrow
+        {
+            Entities = entitiesSpawners,
             ArrowSpawners = arrowSpawners,
-            CommandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer()
-        }.Schedule(inputDeps);
+            CommandBuffer = commandBuffer
+        }.Schedule(handle);
+        
+        
+         handle = new WriteArroMap
+        {
+            Size = board.SizeY,
+            Entities = entitiesArrows,
+            LbArrows = arrowsQuery,
+            ArrowDirectionMap = bufferArray,
+        }.Schedule(handle);
+        
+         handle = new DeleteDestroyedFromArroMap
+         {
+             Size = board.SizeY,
+             Entities = entitiesArrowsDestroyed,
+             LbArrows = arrowsDestroyed,
+             ArrowDirectionMap = bufferArray,
+         }.Schedule(handle);
         
         m_EntityCommandBufferSystem.AddJobHandleForProducer(handle);
 

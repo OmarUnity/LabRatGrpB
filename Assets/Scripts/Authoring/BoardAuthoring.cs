@@ -62,13 +62,13 @@ public class BoardAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 
                 var bitIndex = 0x0;
                 if (HasWall(walls, cellLocation, Directions.North))
-                    bitIndex |= 0x8;
-                if (HasWall(walls, cellLocation, Directions.South))
-                    bitIndex |= 0x4;
-                if (HasWall(walls, cellLocation, Directions.West))
-                    bitIndex |= 0x2;
-                if (HasWall(walls, cellLocation, Directions.East))
                     bitIndex |= 0x1;
+                if (HasWall(walls, cellLocation, Directions.South))
+                    bitIndex |= 0x2;
+                if (HasWall(walls, cellLocation, Directions.West))
+                    bitIndex |= 0x4;
+                if (HasWall(walls, cellLocation, Directions.East))
+                    bitIndex |= 0x8;
 
                 short bufferValue = m_DirList[bitIndex];
                 if (cell.isHole)

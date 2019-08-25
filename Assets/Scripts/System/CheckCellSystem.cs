@@ -11,7 +11,6 @@ public class CheckCellSystem : JobComponentSystem
 
     private EntityQuery m_ReachQuery;
     private EntityQuery m_BoardQuery;
-
     private EntityCommandBufferSystem m_Barrier;
 
     protected override void OnCreate()
@@ -31,8 +30,7 @@ public class CheckCellSystem : JobComponentSystem
             }
         };
         m_ReachQuery = GetEntityQuery(desc);
-        m_BoardQuery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>(), ComponentType.ReadOnly<LbDirectionMap>());
-
+        m_BoardQuery = GetEntityQuery(ComponentType.ReadOnly<LbBoard>(), ComponentType.ReadOnly<LbDirectionMap>(),ComponentType.ReadOnly<LbArrowDirectionMap>());
         m_Barrier = World.GetOrCreateSystem<LbCheckBarrier>();
     }
 
@@ -40,7 +38,7 @@ public class CheckCellSystem : JobComponentSystem
     {
         [ReadOnly] public int2 BoardSize;
         [ReadOnly] public NativeArray<LbDirectionMap> Buffer;
-
+        [ReadOnly] public NativeArray<LbArrowDirectionMap> ArrowDirectionMap;
         [ReadOnly] public ArchetypeChunkEntityType EntityType;
         [ReadOnly] public ArchetypeChunkComponentType<Translation> TranslationType;
         [ReadOnly] public ArchetypeChunkComponentType<LbRat> RatType;
@@ -99,10 +97,16 @@ public class CheckCellSystem : JobComponentSystem
                 else
                 {
                     translation.y = 1.0f;
+                    var currentArrow = ArrowDirectionMap[index].Value;
+                    var newDirection = 0x00;
+                    if ((currentArrow & 0x10) == 0x10)
+                        newDirection = (byte)(currentArrow & 0x03);
+                    else
+                        newDirection = direction.Value;
 
-                    var nextDirectionByte = (byte)((cellMapValue >> LbDirection.GetByteShift(direction.Value)) & 0x3);
-                    directions[i] = new LbDirection() { Value = nextDirectionByte };
-                    targets[i] = new LbMovementTarget() { From = translation, To = translation + LbDirection.GetDirection(nextDirectionByte) };
+                    var nextDirectionByte = (byte)((cellMapValue >> LbDirection.GetByteShift((byte)newDirection)) & 0x3);
+                    directions[i] = new LbDirection() { Value = (byte)nextDirectionByte };
+                    targets[i] = new LbMovementTarget() { From = translation, To = translation + LbDirection.GetDirection((byte)nextDirectionByte)};
                     distanceTargets[i] = new LbDistanceToTarget() { Value = 0.0f };
                 }
             }
@@ -128,6 +132,10 @@ public class CheckCellSystem : JobComponentSystem
         var distanceTargetType = GetArchetypeChunkComponentType<LbDistanceToTarget>();
         var ratType = GetArchetypeChunkComponentType<LbRat>();
         
+        var bufferArrowsLookup = GetBufferFromEntity<LbArrowDirectionMap>();
+        var bufferArrows = bufferArrowsLookup[boardEntity];
+        var bufferArrowsNativeArray = bufferArrows.AsNativeArray();
+        
         var job = new CheckCellNewJob
         {
             BoardSize = new int2(board.SizeX, board.SizeY),
@@ -136,7 +144,7 @@ public class CheckCellSystem : JobComponentSystem
             EntityType = entityType,
             TranslationType = translationType,
             RatType = ratType,
-
+            ArrowDirectionMap = bufferArrowsNativeArray,
             DirectionType = directionType,
             TargetType = targetType,
             DistanceToTargetType = distanceTargetType,

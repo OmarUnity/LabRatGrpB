@@ -152,7 +152,7 @@ MonoBehaviour:
   _SceneAsset: {fileID: 102900000, guid: 12d918f103dd3493f82adb4cf8434070, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   AutoLoadScene: 1
-  m_SubSceneHeader: {fileID: 11400000, guid: 3c7d5431b042cb9459356c926416aaef, type: 2}
+  m_SubSceneHeader: {fileID: 0}
 --- !u!4 &373377746
 Transform:
   m_ObjectHideFlags: 0
