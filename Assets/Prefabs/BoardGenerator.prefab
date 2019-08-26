@@ -60,7 +60,7 @@ MonoBehaviour:
     type: 3}
   SpawnerPrefab: {fileID: 3558524365388033599, guid: ee432d626de424aa9a07753f3971652c,
     type: 3}
-  AdditinalSpawners: 10
+  AdditinalSpawners: 150
   Player1CursorPrefab: {fileID: 7493021013365710350, guid: 9500532dcf3de4a64b0e723423347cb4,
     type: 3}
   Player2CursorPrefab: {fileID: 5967019461391338085, guid: da07684793b2b493097fb94086ad9f6a,

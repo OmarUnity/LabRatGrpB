@@ -91,15 +91,26 @@ public class BoardSpawnerSystem : JobComponentSystem
             PlaceSpawner(ref CommandBuffer, Generator.Player3Cursor, int2.zero);
             PlaceSpawner(ref CommandBuffer, Generator.Player4Cursor, int2.zero);
 
-            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(0, 0));
-            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(Generator.SizeX-1, 0));
-            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(0, Generator.SizeY - 1));
-            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, new int2(Generator.SizeX - 1, Generator.SizeY - 1));
+            var spawnLocation1 = new int2(0, 0);
+            var spawnLocation2 = new int2(Generator.SizeX - 1, 0);
+            var spawnLocation3 = new int2(0, Generator.SizeY - 1);
+            var spawnLocation4 = new int2(Generator.SizeX - 1, Generator.SizeY - 1);
+
+            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, spawnLocation1);
+            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, spawnLocation2);
+            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, spawnLocation3);
+            PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, spawnLocation4);
 
             var random = new Random();
             random.InitState(Seed);
 
             var checkFlag = kHoleFlag | kHomebaseFlag;
+
+            var spawnerMap = new NativeHashMap<int2, byte>(Generator.AdditionalSpawners + 4, Allocator.Temp);
+            spawnerMap.TryAdd(spawnLocation1, 1);
+            spawnerMap.TryAdd(spawnLocation2, 1);
+            spawnerMap.TryAdd(spawnLocation3, 1);
+            spawnerMap.TryAdd(spawnLocation4, 1);
 
             var remaining = Generator.AdditionalSpawners;
             while (remaining > 0)
@@ -107,16 +118,19 @@ public class BoardSpawnerSystem : JobComponentSystem
                 var coord = new int2(random.NextInt(Generator.SizeX), random.NextInt(Generator.SizeY));
                 var index = coord.y * Generator.SizeY + coord.x;
 
-                // Avoid placing spawners in holes and homebases
+                // Avoid placing spawners in holes, homebases and on top of other spawners
                 var cellMapValue = DirectionBuffer[index].Value & checkFlag;
-                if (cellMapValue == kHoleFlag || cellMapValue == kHomebaseFlag)
+                if (cellMapValue == kHoleFlag || cellMapValue == kHomebaseFlag || spawnerMap.ContainsKey(coord))
                 {
                     continue;
                 }
 
                 PlaceSpawner(ref CommandBuffer, Generator.SpawnerPrefab, coord);
+                spawnerMap.TryAdd(coord, 1);
                 remaining--;
             }
+
+            spawnerMap.Dispose();
 
             var entity = CommandBuffer.CreateEntity();
             CommandBuffer.AddComponent(entity, new LbGameTimer() { Value = LbConstants.GameTime });
