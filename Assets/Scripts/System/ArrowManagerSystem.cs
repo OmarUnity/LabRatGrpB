@@ -43,7 +43,7 @@ public class ArrowManagerSystem : JobComponentSystem
                 ArrowSpawners[i] = arrowSpawner;
                 CommandBuffer.AddComponent(instance, new LbArrow {Location = new int2((int)ArrowSpawners[i].Location.x,(int)ArrowSpawners[i].Location.z),Direction = ArrowSpawners[i].Direction});
                 CommandBuffer.AddComponent( instance, new LbLifetime { Value = 10f});
-                CommandBuffer.SetComponent( instance, new Translation{Value = new float3(ArrowSpawners[i].Location.x,0.6f,ArrowSpawners[i].Location.z)});
+                CommandBuffer.SetComponent( instance, new Translation{Value = new float3(ArrowSpawners[i].Location.x,0.85f,ArrowSpawners[i].Location.z)});
                 CommandBuffer.SetComponent( instance, new Rotation{Value = quaternion.EulerXYZ(math.radians(90),math.radians(rotationDegrees),math.radians(0))});
                 CommandBuffer.DestroyEntity(Entities[i]);
             }
@@ -97,8 +97,6 @@ public class ArrowManagerSystem : JobComponentSystem
         var board = m_BoardQuery.GetSingleton<LbBoard>();
         var entitiesSpawners = m_ArrowSpawerQuery.ToEntityArray(Allocator.TempJob);
         var entitiesArrows = m_ArrowsQuery.ToEntityArray(Allocator.TempJob);
-        var entitiesArrowsDestroyed = m_ArrowsDestroyedQuery.ToEntityArray(Allocator.TempJob);
-        var arrowsDestroyed = m_ArrowsDestroyedQuery.ToComponentDataArray<LbArrow>(Allocator.TempJob);
         var arrowSpawners = m_ArrowSpawerQuery.ToComponentDataArray<LbArrowSpawner>(Allocator.TempJob);
         var boardEntity = m_BoardQuery.GetSingletonEntity();
         var arrowsQuery = m_ArrowsQuery.ToComponentDataArray<LbArrow>(Allocator.TempJob);
@@ -112,7 +110,6 @@ public class ArrowManagerSystem : JobComponentSystem
             Source = bufferArray,
             Value = new LbArrowDirectionMap()
         }.Schedule(bufferArray.Length, bufferArray.Length, inputDeps);
-        
         
          handle = new SpawnArrow
         {
@@ -129,14 +126,6 @@ public class ArrowManagerSystem : JobComponentSystem
             LbArrows = arrowsQuery,
             ArrowDirectionMap = bufferArray,
         }.Schedule(handle);
-        
-         handle = new DeleteDestroyedFromArroMap
-         {
-             Size = board.SizeY,
-             Entities = entitiesArrowsDestroyed,
-             LbArrows = arrowsDestroyed,
-             ArrowDirectionMap = bufferArray,
-         }.Schedule(handle);
         
         m_EntityCommandBufferSystem.AddJobHandleForProducer(handle);
 
